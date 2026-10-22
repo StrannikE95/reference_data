@@ -5,70 +5,41 @@ using management.api.Services;
 namespace management.api.Controllers;
 
 /// <summary>
-/// Файлы заполнения черновика и заливка строк в секции.
-/// Паспорт и статус версии не меняет. Пока хранилища нет, успешный ответ — пример контракта.
+/// JSON данных справочника.
+/// По сообщению схемы dictionary.integration.data пишет SQL секции и выполняет его.
 /// </summary>
 [ApiController]
 [Route("admin")]
 [Produces("application/json")]
 public sealed class DataController : ControllerBase
 {
-    private readonly DataService service = new();
+    private readonly ImportService import;
 
     /// <summary>
-    /// Начинает запись пачки файлов черновика и возвращает ссылки на запись.
+    /// Передаёт сервису строку подключения и каталог проекта.
+    /// </summary>
+    public DataController(IConfiguration configuration, IWebHostEnvironment environment)
+    {
+        import = new ImportService(configuration, environment.ContentRootPath);
+    }
+
+    /// <summary>
+    /// Принимает JSON данных, сверяет его со схемой, пишет скрипт в db/sql-data и выполняет.
+    /// Тело — одно сообщение или массив пачек одного прогона. versionId в запрос передаёт модуль справочников.
+    /// Сообщение не по схеме файл не создаёт. Ошибка выполнения уже записанный файл не удаляет.
     /// </summary>
     /// <remarks>
-    /// POST /admin/dictionaries/WallMaterial/draft/files
-    /// { "files": [ { "name": "wall_material.sql", "size": 240 } ] }
+    /// POST /admin/data?versionId=1
+    /// Тело — сообщение dictionary.integration.data, как в Contracts/json/example.
     /// </remarks>
-    [HttpPost("dictionaries/{dictionary_code}/draft/files")]
-    [ProducesResponseType(typeof(FileBatchResponse), StatusCodes.Status200OK)]
+    [HttpPost("data")]
+    [ProducesResponseType(typeof(ImportRunResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
-    public ActionResult<FileBatchResponse> StartDraftFiles(
-        [FromRoute(Name = "dictionary_code")] string dictionaryCode,
-        [FromBody] FileBatchRequest? request)
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ImportRunResponse>> Apply([FromQuery] int? versionId)
     {
-        return service.StartDraftFiles(dictionaryCode, request, ModelState);
-    }
-
-    /// <summary>
-    /// Подтверждает запись файла черновика. Файл версии должен заполнять исходную таблицу профиля.
-    /// </summary>
-    /// <remarks>POST /admin/dictionaries/WallMaterial/draft/files/91c0e2b4-6a18-4f0d-9b77-3e5a1c8d4420/complete</remarks>
-    [HttpPost("dictionaries/{dictionary_code}/draft/files/{file_id}/complete")]
-    [ProducesResponseType(typeof(FileDescription), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
-    public ActionResult<FileDescription> CompleteDraftFile(
-        [FromRoute(Name = "dictionary_code")] string dictionaryCode,
-        [FromRoute(Name = "file_id")] Guid fileId)
-    {
-        return service.CompleteDraftFile(dictionaryCode, fileId, ModelState);
-    }
-
-    /// <summary>
-    /// Снимает файл с черновика. Файл в состоянии loaded дополнительно очищает секцию своей таблицы.
-    /// </summary>
-    /// <remarks>DELETE /admin/dictionaries/WallMaterial/draft/files/91c0e2b4-6a18-4f0d-9b77-3e5a1c8d4420</remarks>
-    [HttpDelete("dictionaries/{dictionary_code}/draft/files/{file_id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
-    public ActionResult DeleteDraftFile(
-        [FromRoute(Name = "dictionary_code")] string dictionaryCode,
-        [FromRoute(Name = "file_id")] Guid fileId)
-    {
-        return service.DeleteDraftFile(dictionaryCode, fileId, ModelState);
-    }
-
-    /// <summary>
-    /// Завершает заливку файлов в состоянии valid. Ошибка одной таблицы не откатывает таблицы, которые уже loaded.
-    /// </summary>
-    /// <remarks>POST /admin/dictionaries/WallMaterial/draft/apply</remarks>
-    [HttpPost("dictionaries/{dictionary_code}/draft/apply")]
-    [ProducesResponseType(typeof(DraftResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
-    public ActionResult<DraftResponse> Apply([FromRoute(Name = "dictionary_code")] string dictionaryCode)
-    {
-        return service.Apply(dictionaryCode, ModelState);
+        using var reader = new StreamReader(Request.Body);
+        var json = await reader.ReadToEndAsync();
+        return import.ApplyData(json, versionId);
     }
 }
