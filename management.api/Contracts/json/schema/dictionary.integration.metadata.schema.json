@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dictionary.integration.metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["loadId", "sourceCode", "sourceFile", "tables"],
+  "properties": {
+    "loadId": { "type": "string", "format": "uuid" },
+    "sourceCode": {
+      "enum": ["ass-building", "wall-material", "oktmo", "gar"]
+    },
+    "sourceFile": { "type": "string", "minLength": 1 },
+    "tables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/table" }
+    }
+  },
+  "$defs": {
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "columns", "primaryKey", "foreignKeys"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/column" }
+        },
+        "primaryKey": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "foreignKeys": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/foreignKey" }
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "nullable"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["string", "integer", "bigint", "date", "uuid"] },
+        "length": { "type": "integer", "minimum": 1 },
+        "nullable": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "string" } } },
+          "then": { "required": ["length"] }
+        }
+      ]
+    },
+    "foreignKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["columns", "references"],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "references": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["table", "columns"],
+          "properties": {
+            "table": { "type": "string", "minLength": 1 },
+            "columns": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

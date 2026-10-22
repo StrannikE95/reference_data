@@ -1,0 +1,16 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "ass-building",
+  "sourceFile": "dAssBuilding_v05.xsd",
+  "part": 1,
+  "last": true,
+  "tables": [
+    {
+      "name": "ass_building",
+      "rows": [
+        { "value_code": "204001000000", "name": "Нежилое" },
+        { "value_code": "204002000000", "name": "Жилой дом" }
+      ]
+    }
+  ]
+}
