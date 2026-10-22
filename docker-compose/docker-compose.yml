@@ -1,0 +1,12 @@
+services:
+  management.api:
+    image: ${DOCKER_REGISTRY-}management-api
+    build:
+      context: ..
+      dockerfile: management.api/Dockerfile
+
+  service.api:
+    image: ${DOCKER_REGISTRY-}service-api
+    build:
+      context: ..
+      dockerfile: service.api/Dockerfile

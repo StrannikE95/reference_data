@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
+  <PropertyGroup Label="Globals">
+    <ProjectVersion>2.1</ProjectVersion>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <DockerPublishLocally>False</DockerPublishLocally>
+    <ProjectGuid>b7e4c1a2-6f3d-4e91-9c58-2d0a7f4e8b16</ProjectGuid>
+    <DockerComposeProjectName>reference_data</DockerComposeProjectName>
+    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
+    <DockerServiceName>management.api</DockerServiceName>
+    <DockerServiceURL>http://localhost:8080/openapi/v1.json</DockerServiceURL>
+    <DockerComposeBaseFilePath>docker-compose</DockerComposeBaseFilePath>
+    <DependencyAwareStart>true</DependencyAwareStart>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="docker-compose.override.yml">
+      <DependentUpon>docker-compose.yml</DependentUpon>
+    </None>
+    <None Include="docker-compose.yml" />
+    <None Include="..\.dockerignore" Link=".dockerignore" />
+  </ItemGroup>
+</Project>
