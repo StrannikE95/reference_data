@@ -4,19 +4,15 @@
 
 ## 1. Первичный запуск
 
-F5 на `management.api` в pre-build event сносит контейнер Postgres вместе с томом и поднимает новый пустой экземпляр. После старта процесса `management.api` сам выполняет `db/sql/001_schema.sql` и `db/sql/002_seed.sql`. `service.api` схему не создаёт.
+F5 на `management.api` в pre-build event сносит контейнер Postgres вместе с томом и поднимает новый пустой экземпляр. После старта процесса `management.api` сам выполняет `db/sql-init/001_schema.sql`. Скрипт создаёт пустые `dictionary` и `dictionary_version`. Справочники из `db/sql-references` при старте не заливаются. `service.api` схему не создаёт.
 
 Команда лежит в pre-build event проекта `management.api` (свойства проекта → Build → Events). Отдельный скрипт не нужен.
 
-После старта каталог содержит два справочника начального наполнения.
+После старта каталог пуст.
 
 `GET http://localhost:8080/admin/dictionaries`
 
-В `items` есть `WallMaterial` (`table_name = wall_material`) и `Address` (`schema_name = address`).
-
-`GET http://localhost:8082/dictionaries/WallMaterial/values/BRICK`
-
-Ответ: версия `1`, `result = present`, `name = Кирпич`.
+`items` пуст, `next_cursor` пуст.
 
 ## 2. Подключение через DBeaver
 
@@ -35,4 +31,4 @@ F5 на `management.api` в pre-build event сносит контейнер Post
 
 3. Test Connection. Если драйвера PostgreSQL ещё нет, DBeaver предложит его скачать. Finish.
 
-В дереве соединения видны схемы `public` и `address`. В `public`: `dictionary`, `dictionary_version`, секционированная `wall_material` и секция `wall_material_1`. В `address`: `addr_object`, `addr_house` и их секции версии `1`.
+В дереве соединения видна схема `public`: пустые `dictionary` и `dictionary_version`. Таблицы справочников появляются после скриптов из `Use-case. Простой справочник.md`.

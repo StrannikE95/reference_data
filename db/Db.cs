@@ -18,15 +18,12 @@ public static class Db
     }
 
     /// <summary>
-    /// Снимает таблицы и заново выполняет 001_schema.sql и 002_seed.sql.
-    /// Стартует вместе с API, поэтому F5 каждый раз возвращает базу к начальному наполнению.
+    /// Снимает каталог и заново выполняет sql-init/001_schema.sql.
     /// </summary>
     public static void Reset(IConfiguration configuration)
     {
         Console.WriteLine("Db.Reset");
-        var directory = Path.Combine(AppContext.BaseDirectory, "sql");
-        var schema = File.ReadAllText(Path.Combine(directory, "001_schema.sql"));
-        var seed = File.ReadAllText(Path.Combine(directory, "002_seed.sql"));
+        var schema = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "sql-init", "001_schema.sql"));
 
         using var connection = Open(configuration);
         using var command = connection.CreateCommand();
@@ -35,8 +32,6 @@ public static class Db
         try
         {
             command.CommandText = schema;
-            command.ExecuteNonQuery();
-            command.CommandText = seed;
             command.ExecuteNonQuery();
         }
         finally

@@ -1,167 +1,93 @@
 # Простой справочник
 
-## 2. Простой справочник
+Справочники в базу не попадают при старте. Каталог `dictionary` и `dictionary_version` создаёт `management.api` из `db/sql-init/001_schema.sql` и оставляет его пустым. Каждый справочник лежит отдельно в `db/sql-references` и выполняется вручную по соединению из раздела «Подключение через DBeaver» в `Use-case. Первичный запуск.md`.
 
-Новый список `OwnershipType`, одна таблица `ownership_type`. Код в начальном наполнении не занят. Поставка — полный дамп, `delivery = full`.
+## 1. Папка справочника
 
-### 2.1. Добавление нового справочника
+Один справочник — одна подпапка:
 
-Паспорт в каталог пишется только на завершении регистрации. До этого таблиц нет.
+`db/sql-references/YYYY.MM.DD_HH.mm - name`
 
-1. Открыть регистрацию.
+`YYYY.MM.DD_HH.mm` — момент добавления, по нему папки идут по порядку. `name` — код справочника, как `dictionary_code`.
 
-`POST http://localhost:8080/admin/registrations`
+В папке два файла, и только они:
 
-```json
-{
-  "dictionary_code": "OwnershipType",
-  "dictionary_name": "Вид собственности",
-  "owner": "Имущество",
-  "source": "Ведомственный перечень"
-}
-```
+| Файл | Что в нём |
+| --- | --- |
+| `metadata.sql` | Паспорт в `dictionary`, строка `dictionary_version`, родительская таблица `PARTITION BY LIST (version_id)` и пустая секция этой версии. Для набора таблиц — схема и все её таблицы |
+| `data.sql` | Строки этой версии. Для набора сначала родитель, потом зависимая таблица |
 
-В ответе `registration_id` и пустой `files`. Пока регистрация открыта, тот же `dictionary_code` второй раз не занимается.
+Уже лежат:
 
-2. Начать запись файла профиля. `size` — размер файла в байтах.
+- `2024.01.01_09.00 - WallMaterial` — простой список `wall_material`, коды `BRICK` и `WOOD`
+- `2024.01.01_09.01 - Address` — схема `address`, таблицы `addr_object` и `addr_house`
 
-`POST http://localhost:8080/admin/registrations/{registration_id}/files`
+## 2. Как выполнить готовый справочник
 
-```json
-{
-  "files": [
-    { "name": "ownership_type.sql", "size": 81 }
-  ]
-}
-```
+База уже запущена, каталог пуст. В DBeaver для папки справочника, по порядку имени папки:
 
-Файл — создание таблицы в исходном виде, без `version_id`:
+1. Открыть `metadata.sql` → Execute SQL Script.
+2. Открыть `data.sql` → Execute SQL Script.
 
-```sql
-CREATE TABLE ownership_type (value_code varchar NOT NULL, name varchar NOT NULL);
-```
+`data.sql` без `metadata.sql` не выполняется: таблиц ещё нет.
 
-3. Записать это содержимое по `upload_url` из ответа. Состояние файла — `uploading`.
+Проверка `WallMaterial`:
 
-4. Подтвердить запись.
+`GET http://localhost:8080/admin/dictionaries/WallMaterial`
 
-`POST http://localhost:8080/admin/registrations/{registration_id}/files/{file_id}/complete`
+Паспорт `active`, `table_name = wall_material`, одна версия `1` со статусом `active`.
 
-Ответ: `state = valid`. Пока есть `uploading` или `invalid`, завершение регистрации недоступно.
+`GET http://localhost:8082/dictionaries/WallMaterial/values/BRICK`
 
-5. Завершить регистрацию.
+`version_id = 1`, `result = present`, `name = Кирпич`.
 
-`POST http://localhost:8080/admin/registrations/{registration_id}/commit`
+## 3. Как добавить новый справочник
 
-Ответ — паспорт: `status = active`, `table_name = ownership_type`, `schema_name = null`, `versions` пуст. Строка версии не создаётся. Регистрация закрыта.
+Пример — простой список `OwnershipType`, таблица `ownership_type`. Код в уже добавленных папках не занят. Имя папки — текущие дата и время, например `2026.10.22_14.00 - OwnershipType`.
 
-Проверка: `GET http://localhost:8080/admin/dictionaries/OwnershipType` возвращает этот паспорт.
-
-### 2.2. Добавление данных
-
-Черновик, заливка и публикация. До публикации сервис чтения эти строки не отдаёт.
-
-1. Открыть черновик.
-
-`POST http://localhost:8080/admin/dictionaries/OwnershipType/draft`
-
-```json
-{
-  "delivery": "full"
-}
-```
-
-Ответ: `version_id = 1`, `version_status = draft`, `files` пуст. Вместе с черновиком создаётся пустая секция этого номера.
-
-2. Начать запись файла заполнения.
-
-`POST http://localhost:8080/admin/dictionaries/OwnershipType/draft/files`
-
-```json
-{
-  "files": [
-    { "name": "ownership_type.sql", "size": 128 }
-  ]
-}
-```
-
-Файл заполняет исходную таблицу профиля:
+1. Создать `db/sql-references/2026.10.22_14.00 - OwnershipType`.
+2. Положить `metadata.sql`:
 
 ```sql
-INSERT INTO ownership_type (value_code, name) VALUES ('PRIVATE', 'Частная'), ('STATE', 'Государственная');
+CREATE TABLE ownership_type (
+    version_id         integer NOT NULL,
+    ownership_type_id  uuid    NOT NULL,
+    value_code         varchar NOT NULL,
+    name               varchar NOT NULL,
+    PRIMARY KEY (version_id, ownership_type_id),
+    UNIQUE (version_id, value_code)
+) PARTITION BY LIST (version_id);
+
+CREATE TABLE ownership_type_1
+    PARTITION OF ownership_type FOR VALUES IN (1);
+
+INSERT INTO dictionary (dictionary_id, dictionary_code, dictionary_name, owner, source, status)
+VALUES ('8d3f5e4c-3f60-4c9d-9e53-2c709b4d9f32', 'OwnershipType', 'Вид собственности', 'Имущество', 'Ведомственный перечень', 'active');
+
+INSERT INTO dictionary_version (
+    dictionary_version_id, dictionary_id, version_id, valid_from, valid_to, status, table_name, schema_name)
+VALUES ('e4c13f62-9d77-4f3c-a088-37b2e1c6d034', '8d3f5e4c-3f60-4c9d-9e53-2c709b4d9f32', 1, '2024-01-01', NULL, 'active', 'ownership_type', NULL);
 ```
 
-3. Записать содержимое по `upload_url`.
+3. Положить `data.sql`:
 
-4. Подтвердить запись.
-
-`POST http://localhost:8080/admin/dictionaries/OwnershipType/draft/files/{file_id}/complete`
-
-Ответ: `state = valid`.
-
-5. Завершить заливку.
-
-`POST http://localhost:8080/admin/dictionaries/OwnershipType/draft/apply`
-
-Файл переходит в `loaded`: строки лежат в секции черновика. `GET http://localhost:8080/admin/dictionaries/OwnershipType/draft` показывает этот статус.
-
-6. Опубликовать.
-
-`POST http://localhost:8080/admin/dictionaries/OwnershipType/draft/publish`
-
-```json
-{
-  "valid_from": "2024-01-01"
-}
+```sql
+INSERT INTO ownership_type (version_id, ownership_type_id, value_code, name)
+VALUES
+    (1, 'd1111111-1111-4111-8111-111111111111', 'PRIVATE', 'Частная'),
+    (1, 'd2222222-2222-4222-8222-222222222222', 'STATE', 'Государственная');
 ```
 
-Ответ: `version_status = active`, `valid_from = 2024-01-01`, `valid_to = null`. Это первая версия, поэтому `closed_version_id` и `closed_valid_to` пусты.
+4. Выполнить `metadata.sql`, затем `data.sql`.
 
-Проверка каталога: `GET http://localhost:8080/admin/dictionaries/OwnershipType` — одна версия, статус `active`.
-
-### 2.3. Получение данных справочника
-
-Читает `service.api`. Черновик не возвращается. В ответ входят `value_code` и `name` опубликованной версии.
-
-Одно значение действующей версии:
+Проверка:
 
 `GET http://localhost:8082/dictionaries/OwnershipType/values/PRIVATE`
 
-`version_id = 1`, `version_status = active`, `result = present`, `name = Частная`.
-
-Код, которого в версии нет:
-
-`GET http://localhost:8082/dictionaries/OwnershipType/values/PAPER`
-
-`result = absent`, `name = null`. Тот же `version_id`.
-
-Страница действующей версии, по возрастанию `value_code`:
+`version_id = 1`, `result = present`, `name = Частная`.
 
 `GET http://localhost:8082/dictionaries/OwnershipType/values?limit=100`
 
-В `items` две строки: `PRIVATE` / «Частная», `STATE` / «Государственная». Конец списка — пустой `next_cursor`.
+В `items` две строки: `PRIVATE` / «Частная», `STATE` / «Государственная». `next_cursor` пуст.
 
-Та же редакция на дату внутри периода:
-
-`GET http://localhost:8082/dictionaries/OwnershipType/values/PRIVATE?on_date=2024-06-01`
-
-Снова версия `1` и `result = present`.
-
-Дата раньше первой редакции:
-
-`GET http://localhost:8082/dictionaries/OwnershipType/values/PRIVATE?on_date=2023-12-31`
-
-`404`, `error = date_out_of_range`. Версия `1` не подставляется.
-
-Проверка ссылок по номеру версии. Повтор кода возвращается один раз.
-
-`POST http://localhost:8082/dictionaries/OwnershipType/values/check`
-
-```json
-{
-  "version_id": 1,
-  "value_codes": ["PRIVATE", "PAPER", "PRIVATE"]
-}
-```
-
-В `items` две строки: `PRIVATE` — `present`, `PAPER` — `absent`.
+Следующая версия того же справочника — новая папка с более поздним временем, секция `ownership_type_2` и `version_id = 2`. Предыдущую папку не переписывают.
