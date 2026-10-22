@@ -35,10 +35,13 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionString=Host=postgres;Port=5432;Database=reference_data;Username=app;Password=app
+      - ManagementApi=http://management.api:8080
+      - ImportRoot=/inbox
     ports:
       - "8084:8080"
       - "8085:8081"
     volumes:
+      - C:/inbox:/inbox:ro
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

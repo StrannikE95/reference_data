@@ -44,6 +44,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      management.api:
+        condition: service_started
 
 volumes:
   pgdata:
