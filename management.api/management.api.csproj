@@ -9,7 +9,12 @@
     <DockerComposeProjectPath>..\docker-compose\docker-compose.dcproj</DockerComposeProjectPath>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
   </PropertyGroup>
+
+  <Target Name="RecreatePostgres" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\.." Command="docker compose --project-name docker-compose -f docker-compose\docker-compose.yml -f docker-compose\docker-compose.override.yml down -v &amp;&amp; docker compose --project-name reference_data -f docker-compose\docker-compose.yml -f docker-compose\docker-compose.override.yml down -v &amp;&amp; docker compose --project-name reference_data -f docker-compose\docker-compose.yml -f docker-compose\docker-compose.override.yml up -d --wait postgres" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
@@ -18,6 +23,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\db\db.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\db\sql\*.sql" Link="sql\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

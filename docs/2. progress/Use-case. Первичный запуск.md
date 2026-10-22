@@ -4,16 +4,9 @@
 
 ## 1. Первичный запуск
 
-База пересоздаётся, скрипты инициализации накатываются на пустой том, оба API поднимаются после неё.
+F5 на `management.api` в pre-build event сносит контейнер Postgres вместе с томом и поднимает новый пустой экземпляр. После старта процесса `management.api` сам выполняет `db/sql/001_schema.sql` и `db/sql/002_seed.sql`. `service.api` схему не создаёт.
 
-Из корня репозитория:
-
-```powershell
-docker compose -f docker-compose/docker-compose.yml -f docker-compose/docker-compose.override.yml down -v
-docker compose -f docker-compose/docker-compose.yml -f docker-compose/docker-compose.override.yml up -d --build
-```
-
-`down -v` удаляет том `pgdata`. Новый контейнер Postgres выполняет `db/sql/001_schema.sql`, затем `db/sql/002_seed.sql`. `management.api` и `service.api` стартуют, когда база принимает соединения.
+Команда лежит в pre-build event проекта `management.api` (свойства проекта → Build → Events). Отдельный скрипт не нужен.
 
 После старта каталог содержит два справочника начального наполнения.
 

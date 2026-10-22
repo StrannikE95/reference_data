@@ -1,3 +1,5 @@
+name: reference_data
+
 services:
   postgres:
     image: postgres:17
@@ -9,13 +11,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ../db/sql/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
-      - ../db/sql/002_seed.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d reference_data"]
-      interval: 2s
-      timeout: 2s
-      retries: 20
+      test: ["CMD-SHELL", "pg_isready -U app -d reference_data && sleep 3 && pg_isready -U app -d reference_data"]
+      interval: 5s
+      timeout: 15s
+      retries: 30
+      start_period: 5s
 
   management.api:
     image: ${DOCKER_REGISTRY-}management-api

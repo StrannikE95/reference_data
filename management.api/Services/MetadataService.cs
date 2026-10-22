@@ -36,7 +36,7 @@ public sealed class MetadataService
         var where = string.IsNullOrEmpty(cursor) ? "" : $"WHERE dictionary_code > '{cursor}'";
         using var connection = Db.Open(configuration);
         var rows = connection.Query<DictionaryPassport>(
-            $"SELECT dictionary_id, dictionary_code, dictionary_name, owner, source, status, table_name, schema_name FROM dictionary {where} ORDER BY dictionary_code LIMIT {take + 1}").ToList();
+            $"SELECT dictionary_id, dictionary_code, dictionary_name, owner, source, status FROM dictionary {where} ORDER BY dictionary_code LIMIT {take + 1}").ToList();
 
         string? next = null;
         if (rows.Count > take)
@@ -45,7 +45,14 @@ public sealed class MetadataService
             rows = rows.Take(take).ToList();
         }
 
-        return new OkObjectResult(new DictionaryListResponse { Items = rows, NextCursor = next });
+        var placementByDictionary = PlacementByDictionary(connection, rows.Select(row => row.DictionaryId));
+        var items = rows.Select(row =>
+        {
+            placementByDictionary.TryGetValue(row.DictionaryId, out var placement);
+            return WithPlacement(row, placement);
+        }).ToList();
+
+        return new OkObjectResult(new DictionaryListResponse { Items = items, NextCursor = next });
     }
 
     /// <summary>
@@ -57,12 +64,13 @@ public sealed class MetadataService
         Console.WriteLine($"Get {dictionaryCode}");
         using var connection = Db.Open(configuration);
         var passport = connection.QueryFirstOrDefault<DictionaryPassport>(
-            $"SELECT dictionary_id, dictionary_code, dictionary_name, owner, source, status, table_name, schema_name FROM dictionary WHERE dictionary_code = '{dictionaryCode}'");
+            $"SELECT dictionary_id, dictionary_code, dictionary_name, owner, source, status FROM dictionary WHERE dictionary_code = '{dictionaryCode}'");
         if (passport is null)
             return new NotFoundObjectResult(new AdminErrorResponse { Error = "dictionary_not_found", DictionaryCode = dictionaryCode });
 
         var versions = connection.Query<DictionaryVersion>(
             $"SELECT dictionary_version_id, version_id, status, valid_from, valid_to, table_name, schema_name FROM dictionary_version WHERE dictionary_id = '{passport.DictionaryId}' ORDER BY version_id").ToList();
+        var placement = versions.FirstOrDefault();
 
         return new OkObjectResult(new DictionaryPassport
         {
@@ -72,8 +80,8 @@ public sealed class MetadataService
             Owner = passport.Owner,
             Source = passport.Source,
             Status = passport.Status,
-            TableName = passport.TableName,
-            SchemaName = passport.SchemaName,
+            TableName = placement?.TableName,
+            SchemaName = placement?.SchemaName,
             Versions = versions
         });
     }
@@ -347,4 +355,39 @@ public sealed class MetadataService
     };
 
     private static bool Blank(string? value) => string.IsNullOrWhiteSpace(value);
+
+    /// <summary>
+    /// Размещение лежит на версии и одно на все версии справочника. В паспорте его нет.
+    /// </summary>
+    private static Dictionary<Guid, PlacementRow> PlacementByDictionary(Npgsql.NpgsqlConnection connection, IEnumerable<Guid> dictionaryIds)
+    {
+        var ids = dictionaryIds.Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+
+        var inList = string.Join(", ", ids.Select(id => $"'{id}'"));
+        return connection.Query<PlacementRow>(
+                $"SELECT dictionary_id, table_name, schema_name FROM dictionary_version WHERE dictionary_id IN ({inList})")
+            .GroupBy(row => row.DictionaryId)
+            .ToDictionary(group => group.Key, group => group.First());
+    }
+
+    private static DictionaryPassport WithPlacement(DictionaryPassport passport, PlacementRow? placement) => new()
+    {
+        DictionaryId = passport.DictionaryId,
+        DictionaryCode = passport.DictionaryCode,
+        DictionaryName = passport.DictionaryName,
+        Owner = passport.Owner,
+        Source = passport.Source,
+        Status = passport.Status,
+        TableName = placement?.TableName,
+        SchemaName = placement?.SchemaName
+    };
+
+    private sealed class PlacementRow
+    {
+        public Guid DictionaryId { get; set; }
+        public string? TableName { get; set; }
+        public string? SchemaName { get; set; }
+    }
 }

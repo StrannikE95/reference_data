@@ -1,4 +1,10 @@
 -- Каталог и две поставки, как после регистрации: простой список и схема из двух таблиц.
+-- Скрипт можно выполнить повторно: старые таблицы снимаются.
+
+DROP SCHEMA IF EXISTS address CASCADE;
+DROP TABLE IF EXISTS wall_material CASCADE;
+DROP TABLE IF EXISTS dictionary_version CASCADE;
+DROP TABLE IF EXISTS dictionary CASCADE;
 
 CREATE TABLE dictionary (
     dictionary_id   uuid PRIMARY KEY,
@@ -6,9 +12,7 @@ CREATE TABLE dictionary (
     dictionary_name varchar NOT NULL,
     owner           varchar NOT NULL,
     source          varchar NOT NULL,
-    status          varchar NOT NULL,
-    table_name      varchar,
-    schema_name     varchar
+    status          varchar NOT NULL
 );
 
 CREATE TABLE dictionary_version (
@@ -24,11 +28,11 @@ CREATE TABLE dictionary_version (
 );
 
 CREATE TABLE wall_material (
-    version_id                 integer NOT NULL,
-    simple_dictionary_table_id uuid    NOT NULL,
-    value_code                 varchar NOT NULL,
-    name                       varchar NOT NULL,
-    PRIMARY KEY (version_id, simple_dictionary_table_id),
+    version_id        integer NOT NULL,
+    wall_material_id  uuid    NOT NULL,
+    value_code        varchar NOT NULL,
+    name              varchar NOT NULL,
+    PRIMARY KEY (version_id, wall_material_id),
     UNIQUE (version_id, value_code)
 ) PARTITION BY LIST (version_id);
 
