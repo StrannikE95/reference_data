@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using management.api.Contracts;
+using management.api.Services;
 
 namespace management.api.Controllers;
 
@@ -12,6 +13,8 @@ namespace management.api.Controllers;
 [Produces("application/json")]
 public sealed class DataController : ControllerBase
 {
+    private readonly DataService service = new();
+
     /// <summary>
     /// Начинает запись пачки файлов черновика и возвращает ссылки на запись.
     /// </summary>
@@ -26,26 +29,7 @@ public sealed class DataController : ControllerBase
         [FromRoute(Name = "dictionary_code")] string dictionaryCode,
         [FromBody] FileBatchRequest? request)
     {
-        var rejected = RejectFiles(request);
-        if (rejected is not null)
-            return rejected;
-
-        var files = new List<FileDescription>();
-        foreach (var file in request!.Files!)
-        {
-            var fileId = Guid.NewGuid();
-            files.Add(new FileDescription
-            {
-                FileId = fileId,
-                Name = file.Name!,
-                Size = file.Size,
-                State = "uploading",
-                Error = null,
-                UploadUrl = $"https://storage.example/upload/{fileId}"
-            });
-        }
-
-        return Ok(new FileBatchResponse { Files = files });
+        return service.StartDraftFiles(dictionaryCode, request, ModelState);
     }
 
     /// <summary>
@@ -59,17 +43,7 @@ public sealed class DataController : ControllerBase
         [FromRoute(Name = "dictionary_code")] string dictionaryCode,
         [FromRoute(Name = "file_id")] Guid fileId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request", DictionaryCode = dictionaryCode });
-
-        return Ok(new FileDescription
-        {
-            FileId = fileId,
-            Name = "wall_material.sql",
-            Size = 240,
-            State = "valid",
-            Error = null
-        });
+        return service.CompleteDraftFile(dictionaryCode, fileId, ModelState);
     }
 
     /// <summary>
@@ -83,10 +57,7 @@ public sealed class DataController : ControllerBase
         [FromRoute(Name = "dictionary_code")] string dictionaryCode,
         [FromRoute(Name = "file_id")] Guid fileId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request", DictionaryCode = dictionaryCode });
-
-        return NoContent();
+        return service.DeleteDraftFile(dictionaryCode, fileId, ModelState);
     }
 
     /// <summary>
@@ -98,41 +69,6 @@ public sealed class DataController : ControllerBase
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public ActionResult<DraftResponse> Apply([FromRoute(Name = "dictionary_code")] string dictionaryCode)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request", DictionaryCode = dictionaryCode });
-
-        return Ok(new DraftResponse
-        {
-            DictionaryCode = dictionaryCode,
-            VersionId = 3,
-            VersionStatus = "draft",
-            Delivery = "full",
-            Files =
-            [
-                new FileDescription
-                {
-                    FileId = Guid.Parse("91c0e2b4-6a18-4f0d-9b77-3e5a1c8d4420"),
-                    Name = "wall_material.sql",
-                    Size = 240,
-                    State = "loaded",
-                    Error = null
-                }
-            ]
-        });
-    }
-
-    private ActionResult? RejectFiles(FileBatchRequest? request)
-    {
-        if (!ModelState.IsValid || request?.Files is null || request.Files.Count is < 1 or > 100)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        var names = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var file in request.Files)
-        {
-            if (file is null || string.IsNullOrWhiteSpace(file.Name) || file.Size < 1 || !names.Add(file.Name))
-                return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-        }
-
-        return null;
+        return service.Apply(dictionaryCode, ModelState);
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using management.api.Contracts;
+using management.api.Services;
 
 namespace management.api.Controllers;
 
@@ -12,7 +13,7 @@ namespace management.api.Controllers;
 [Produces("application/json")]
 public sealed class MetadataController : ControllerBase
 {
-    private static readonly Guid ExampleDictionaryId = Guid.Parse("6b1f3c2a-1d4e-4a7b-9c31-0a5e8f2b7d10");
+    private readonly MetadataService service = new();
 
     /// <summary>
     /// Возвращает страницу паспортов. Незавершённая регистрация в список не входит.
@@ -23,14 +24,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public ActionResult<DictionaryListResponse> List([FromQuery] int? limit, [FromQuery] string? cursor)
     {
-        if (!ModelState.IsValid || limit is < 1 or > 1000 || cursor is not null && string.IsNullOrWhiteSpace(cursor))
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        IReadOnlyList<DictionaryPassport> items = string.IsNullOrEmpty(cursor)
-            ? [Passport("WallMaterial", includeVersions: false)]
-            : [];
-
-        return Ok(new DictionaryListResponse { Items = items, NextCursor = null });
+        return service.List(limit, cursor, ModelState);
     }
 
     /// <summary>
@@ -42,7 +36,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(DictionaryPassport), StatusCodes.Status200OK)]
     public ActionResult<DictionaryPassport> Get([FromRoute(Name = "dictionary_code")] string dictionaryCode)
     {
-        return Ok(Passport(dictionaryCode, includeVersions: true));
+        return service.Get(dictionaryCode);
     }
 
     /// <summary>
@@ -58,18 +52,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public ActionResult<RegistrationResponse> OpenRegistration([FromBody] OpenRegistrationRequest? request)
     {
-        if (!ModelState.IsValid || request is null || Blank(request.DictionaryCode) || Blank(request.DictionaryName) || Blank(request.Owner) || Blank(request.Source))
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        return Ok(new RegistrationResponse
-        {
-            RegistrationId = Guid.NewGuid(),
-            DictionaryCode = request.DictionaryCode!,
-            DictionaryName = request.DictionaryName!,
-            Owner = request.Owner!,
-            Source = request.Source!,
-            Files = []
-        });
+        return service.OpenRegistration(request, ModelState);
     }
 
     /// <summary>
@@ -81,18 +64,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public ActionResult<RegistrationResponse> GetRegistration([FromRoute(Name = "registration_id")] Guid registrationId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        return Ok(new RegistrationResponse
-        {
-            RegistrationId = registrationId,
-            DictionaryCode = "WallMaterial",
-            DictionaryName = "Материал стен",
-            Owner = "Имущество",
-            Source = "Ведомственный перечень",
-            Files = []
-        });
+        return service.GetRegistration(registrationId, ModelState);
     }
 
     /// <summary>
@@ -104,10 +76,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public ActionResult CancelRegistration([FromRoute(Name = "registration_id")] Guid registrationId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        return NoContent();
+        return service.CancelRegistration(registrationId, ModelState);
     }
 
     /// <summary>
@@ -120,22 +89,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public ActionResult<DictionaryPassport> CommitRegistration([FromRoute(Name = "registration_id")] Guid registrationId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        var passport = Passport("WallMaterial", includeVersions: false);
-        return Ok(new DictionaryPassport
-        {
-            DictionaryId = passport.DictionaryId,
-            DictionaryCode = passport.DictionaryCode,
-            DictionaryName = passport.DictionaryName,
-            Owner = passport.Owner,
-            Source = passport.Source,
-            Status = passport.Status,
-            TableName = passport.TableName,
-            SchemaName = passport.SchemaName,
-            Versions = []
-        });
+        return service.CommitRegistration(registrationId, ModelState);
     }
 
     /// <summary>
@@ -152,11 +106,7 @@ public sealed class MetadataController : ControllerBase
         [FromRoute(Name = "registration_id")] Guid registrationId,
         [FromBody] FileBatchRequest? request)
     {
-        var rejected = RejectFiles(request);
-        if (rejected is not null)
-            return rejected;
-
-        return Ok(Uploading(request!));
+        return service.StartRegistrationFiles(registrationId, request, ModelState);
     }
 
     /// <summary>
@@ -170,10 +120,7 @@ public sealed class MetadataController : ControllerBase
         [FromRoute(Name = "registration_id")] Guid registrationId,
         [FromRoute(Name = "file_id")] Guid fileId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        return Ok(Completed(fileId));
+        return service.CompleteRegistrationFile(registrationId, fileId, ModelState);
     }
 
     /// <summary>
@@ -187,10 +134,7 @@ public sealed class MetadataController : ControllerBase
         [FromRoute(Name = "registration_id")] Guid registrationId,
         [FromRoute(Name = "file_id")] Guid fileId)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        return NoContent();
+        return service.DeleteRegistrationFile(registrationId, fileId, ModelState);
     }
 
     /// <summary>
@@ -207,13 +151,7 @@ public sealed class MetadataController : ControllerBase
         [FromRoute(Name = "dictionary_code")] string dictionaryCode,
         [FromBody] OpenDraftRequest? request)
     {
-        if (!ModelState.IsValid || request is null || request.Delivery is not ("full" or "increment"))
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request", DictionaryCode = dictionaryCode });
-
-        if (request.Delivery == "increment")
-            return BadRequest(new AdminErrorResponse { Error = "increment_not_supported", DictionaryCode = dictionaryCode });
-
-        return Ok(Draft(dictionaryCode, request.Delivery, []));
+        return service.OpenDraft(dictionaryCode, request, ModelState);
     }
 
     /// <summary>
@@ -224,7 +162,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(typeof(DraftResponse), StatusCodes.Status200OK)]
     public ActionResult<DraftResponse> GetDraft([FromRoute(Name = "dictionary_code")] string dictionaryCode)
     {
-        return Ok(Draft(dictionaryCode, "full", []));
+        return service.GetDraft(dictionaryCode);
     }
 
     /// <summary>
@@ -235,7 +173,7 @@ public sealed class MetadataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public ActionResult CancelDraft([FromRoute(Name = "dictionary_code")] string dictionaryCode)
     {
-        return NoContent();
+        return service.CancelDraft(dictionaryCode);
     }
 
     /// <summary>
@@ -253,117 +191,6 @@ public sealed class MetadataController : ControllerBase
         [FromRoute(Name = "dictionary_code")] string dictionaryCode,
         [FromBody] PublishRequest? request)
     {
-        if (!ModelState.IsValid || request?.ValidFrom is null || request.ValidFrom.Value > DateOnly.FromDateTime(DateTime.Today))
-        {
-            return BadRequest(new AdminErrorResponse
-            {
-                Error = "invalid_valid_from",
-                DictionaryCode = dictionaryCode
-            });
-        }
-
-        var validFrom = request.ValidFrom.Value;
-        return Ok(new PublishResponse
-        {
-            DictionaryCode = dictionaryCode,
-            VersionId = 3,
-            VersionStatus = "active",
-            ValidFrom = validFrom,
-            ValidTo = null,
-            ClosedVersionId = 2,
-            ClosedValidTo = validFrom.AddDays(-1)
-        });
+        return service.Publish(dictionaryCode, request, ModelState);
     }
-
-    private static DictionaryPassport Passport(string dictionaryCode, bool includeVersions) => new()
-    {
-        DictionaryId = ExampleDictionaryId,
-        DictionaryCode = dictionaryCode,
-        DictionaryName = "Материал стен",
-        Owner = "Имущество",
-        Source = "Ведомственный перечень",
-        Status = "active",
-        TableName = "wall_material",
-        SchemaName = null,
-        Versions = includeVersions ? ExampleVersions() : null
-    };
-
-    private static IReadOnlyList<DictionaryVersion> ExampleVersions() =>
-    [
-        new()
-        {
-            DictionaryVersionId = Guid.Parse("c2a91e40-7b55-4d1a-8e66-15f0c9a4b812"),
-            VersionId = 1,
-            Status = "closed",
-            ValidFrom = new DateOnly(2024, 1, 1),
-            ValidTo = new DateOnly(2026, 10, 19),
-            TableName = "wall_material",
-            SchemaName = null
-        },
-        new()
-        {
-            DictionaryVersionId = Guid.Parse("e84b0d17-2f6c-4c9a-b331-90ad6e5f4412"),
-            VersionId = 2,
-            Status = "active",
-            ValidFrom = new DateOnly(2026, 10, 20),
-            ValidTo = null,
-            TableName = "wall_material",
-            SchemaName = null
-        }
-    ];
-
-    private static DraftResponse Draft(string dictionaryCode, string delivery, IReadOnlyList<FileDescription> files) => new()
-    {
-        DictionaryCode = dictionaryCode,
-        VersionId = 3,
-        VersionStatus = "draft",
-        Delivery = delivery,
-        Files = files
-    };
-
-    private ActionResult? RejectFiles(FileBatchRequest? request)
-    {
-        if (!ModelState.IsValid || request?.Files is null || request.Files.Count is < 1 or > 100)
-            return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-
-        var names = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var file in request.Files)
-        {
-            if (file is null || string.IsNullOrWhiteSpace(file.Name) || file.Size < 1 || !names.Add(file.Name))
-                return BadRequest(new AdminErrorResponse { Error = "invalid_request" });
-        }
-
-        return null;
-    }
-
-    private static FileBatchResponse Uploading(FileBatchRequest request)
-    {
-        var files = new List<FileDescription>();
-        foreach (var file in request.Files!)
-        {
-            var fileId = Guid.NewGuid();
-            files.Add(new FileDescription
-            {
-                FileId = fileId,
-                Name = file.Name!,
-                Size = file.Size,
-                State = "uploading",
-                Error = null,
-                UploadUrl = $"https://storage.example/upload/{fileId}"
-            });
-        }
-
-        return new FileBatchResponse { Files = files };
-    }
-
-    private static FileDescription Completed(Guid fileId) => new()
-    {
-        FileId = fileId,
-        Name = "wall_material.sql",
-        Size = 240,
-        State = "valid",
-        Error = null
-    };
-
-    private static bool Blank(string? value) => string.IsNullOrWhiteSpace(value);
 }

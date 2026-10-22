@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using service.api.Contracts;
+using service.api.Services;
 
 namespace service.api.Controllers;
 
 /// <summary>
 /// Чтение опубликованных значений простого списка.
-/// Черновик не отдаёт. Пока каталог и секции не подключены, форма запроса проверяется здесь,
+/// Черновик не отдаёт. Пока каталог и секции не подключены, форма запроса проверяется в DataService,
 /// а строки ответа — пример контракта: BRICK есть в редакции, любого другого кода нет.
 /// </summary>
 [ApiController]
@@ -13,6 +14,8 @@ namespace service.api.Controllers;
 [Produces("application/json")]
 public sealed class DataController : ControllerBase
 {
+    private readonly DataService service = new();
+
     /// <summary>
     /// Возвращает одно значение выбранной редакции.
     /// on_date и version_id вместе не принимаются: редакцию выбирает один признак.
@@ -31,23 +34,7 @@ public sealed class DataController : ControllerBase
         [FromQuery(Name = "on_date")] DateOnly? onDate,
         [FromQuery(Name = "version_id")] int? versionId)
     {
-        var rejected = RejectSelector(dictionaryCode, onDate, versionId);
-        if (rejected is not null)
-            return rejected;
-
-        var known = valueCode == "BRICK";
-        return Ok(new ValueReadResponse
-        {
-            DictionaryCode = dictionaryCode,
-            VersionId = versionId ?? 2,
-            VersionStatus = "active",
-            ValidFrom = new DateOnly(2026, 10, 20),
-            ValidTo = null,
-            Archived = false,
-            Result = known ? "present" : "absent",
-            ValueCode = valueCode,
-            Name = known ? "Кирпич" : null
-        });
+        return service.GetValue(dictionaryCode, valueCode, onDate, versionId, ModelState);
     }
 
     /// <summary>
@@ -67,28 +54,7 @@ public sealed class DataController : ControllerBase
         [FromQuery] int? limit,
         [FromQuery] string? cursor)
     {
-        var rejected = RejectSelector(dictionaryCode, onDate, versionId);
-        if (rejected is not null)
-            return rejected;
-
-        if (limit is < 1 or > 1000 || cursor is not null && string.IsNullOrWhiteSpace(cursor))
-            return BadRequest(Error("invalid_request", dictionaryCode, onDate));
-
-        var items = string.IsNullOrEmpty(cursor)
-            ? new List<ValueItem> { new() { ValueCode = "BRICK", Name = "Кирпич" } }
-            : [];
-
-        return Ok(new ValuePageResponse
-        {
-            DictionaryCode = dictionaryCode,
-            VersionId = versionId ?? 2,
-            VersionStatus = "active",
-            ValidFrom = new DateOnly(2026, 10, 20),
-            ValidTo = null,
-            Archived = false,
-            Items = items,
-            NextCursor = null
-        });
+        return service.GetPage(dictionaryCode, onDate, versionId, limit, cursor, ModelState);
     }
 
     /// <summary>
@@ -106,55 +72,6 @@ public sealed class DataController : ControllerBase
         [FromRoute(Name = "dictionary_code")] string dictionaryCode,
         [FromBody] CheckValuesRequest? request)
     {
-        if (!ModelState.IsValid || request is null || request.VersionId < 1 || request.ValueCodes is null || request.ValueCodes.Count is < 1 or > 1000)
-            return BadRequest(Error("invalid_request", dictionaryCode, null));
-
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        var items = new List<CheckValueItem>();
-        foreach (var code in request.ValueCodes)
-        {
-            if (string.IsNullOrWhiteSpace(code))
-                return BadRequest(Error("invalid_request", dictionaryCode, null));
-
-            if (!seen.Add(code))
-                continue;
-
-            var known = code == "BRICK";
-            items.Add(new CheckValueItem
-            {
-                ValueCode = code,
-                Result = known ? "present" : "absent",
-                Name = known ? "Кирпич" : null
-            });
-        }
-
-        return Ok(new CheckValuesResponse
-        {
-            DictionaryCode = dictionaryCode,
-            VersionId = request.VersionId,
-            VersionStatus = "active",
-            ValidFrom = new DateOnly(2026, 10, 20),
-            ValidTo = null,
-            Archived = false,
-            Items = items
-        });
+        return service.Check(dictionaryCode, request, ModelState);
     }
-
-    private ActionResult? RejectSelector(string dictionaryCode, DateOnly? onDate, int? versionId)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(Error("invalid_request", dictionaryCode, onDate));
-
-        if (onDate is not null && versionId is not null)
-            return BadRequest(Error("version_selector_conflict", dictionaryCode, onDate));
-
-        return null;
-    }
-
-    private static ReadErrorResponse Error(string error, string dictionaryCode, DateOnly? onDate) => new()
-    {
-        Error = error,
-        DictionaryCode = dictionaryCode,
-        OnDate = onDate
-    };
 }
