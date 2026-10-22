@@ -6,14 +6,22 @@ namespace management.api.Controllers;
 
 /// <summary>
 /// Каталог справочников: паспорта, регистрация профиля, черновик версии и публикация.
-/// Строки значений не читает и не пишет. Пока каталог не подключён, успешный ответ — пример паспорта WallMaterial.
+/// Список и паспорт читаются из PostgreSQL. Регистрация, черновик и публикация пока отвечают примером контракта.
 /// </summary>
 [ApiController]
 [Route("admin")]
 [Produces("application/json")]
 public sealed class MetadataController : ControllerBase
 {
-    private readonly MetadataService service = new();
+    private readonly MetadataService service;
+
+    /// <summary>
+    /// Передаёт сервису конфигурацию со строкой подключения.
+    /// </summary>
+    public MetadataController(IConfiguration configuration)
+    {
+        service = new MetadataService(configuration);
+    }
 
     /// <summary>
     /// Возвращает страницу паспортов. Незавершённая регистрация в список не входит.
@@ -34,6 +42,7 @@ public sealed class MetadataController : ControllerBase
     /// <remarks>GET /admin/dictionaries/WallMaterial</remarks>
     [HttpGet("dictionaries/{dictionary_code}")]
     [ProducesResponseType(typeof(DictionaryPassport), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status404NotFound)]
     public ActionResult<DictionaryPassport> Get([FromRoute(Name = "dictionary_code")] string dictionaryCode)
     {
         return service.Get(dictionaryCode);

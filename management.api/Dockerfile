@@ -13,6 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["management.api/management.api.csproj", "management.api/"]
+COPY ["db/db.csproj", "db/"]
 RUN dotnet restore "./management.api/management.api.csproj"
 COPY . .
 WORKDIR "/src/management.api"

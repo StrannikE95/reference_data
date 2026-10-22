@@ -1,12 +1,39 @@
 services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: reference_data
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../db/sql/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+      - ../db/sql/002_seed.sql:/docker-entrypoint-initdb.d/002_seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d reference_data"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
   management.api:
     image: ${DOCKER_REGISTRY-}management-api
     build:
       context: ..
       dockerfile: management.api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   service.api:
     image: ${DOCKER_REGISTRY-}service-api
     build:
       context: ..
       dockerfile: service.api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

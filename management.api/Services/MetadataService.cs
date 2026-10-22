@@ -1,31 +1,51 @@
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using management.api.Contracts;
+using db;
 
 namespace management.api.Services;
 
 /// <summary>
 /// Каталог, регистрация профиля и черновик версии для MetadataController.
-/// Строки значений не читает из базы. Пока каталог не подключён, здесь проверяется форма запроса,
-/// а успешный ответ — пример паспорта WallMaterial.
+/// Список и паспорт читает из PostgreSQL. Регистрация, черновик и публикация пока отвечают примером контракта.
 /// </summary>
 public sealed class MetadataService
 {
     private static readonly Guid ExampleDictionaryId = Guid.Parse("6b1f3c2a-1d4e-4a7b-9c31-0a5e8f2b7d10");
+    private readonly IConfiguration configuration;
+
+    /// <summary>
+    /// Берёт строку подключения для чтения каталога.
+    /// </summary>
+    public MetadataService(IConfiguration configuration)
+    {
+        this.configuration = configuration;
+    }
 
     /// <summary>
     /// Возвращает страницу паспортов. Незавершённая регистрация в список не входит.
     /// </summary>
     public ActionResult<DictionaryListResponse> List(int? limit, string? cursor, ModelStateDictionary modelState)
     {
+        Console.WriteLine($"List limit={limit} cursor={cursor}");
         if (!modelState.IsValid || limit is < 1 or > 1000 || cursor is not null && string.IsNullOrWhiteSpace(cursor))
             return new BadRequestObjectResult(new AdminErrorResponse { Error = "invalid_request" });
 
-        IReadOnlyList<DictionaryPassport> items = string.IsNullOrEmpty(cursor)
-            ? [Passport("WallMaterial", includeVersions: false)]
-            : [];
+        var take = limit ?? 1000;
+        var where = string.IsNullOrEmpty(cursor) ? "" : $"WHERE dictionary_code > '{cursor}'";
+        using var connection = Db.Open(configuration);
+        var rows = connection.Query<DictionaryPassport>(
+            $"SELECT dictionary_id, dictionary_code, dictionary_name, owner, source, status, table_name, schema_name FROM dictionary {where} ORDER BY dictionary_code LIMIT {take + 1}").ToList();
 
-        return new OkObjectResult(new DictionaryListResponse { Items = items, NextCursor = null });
+        string? next = null;
+        if (rows.Count > take)
+        {
+            next = rows[take - 1].DictionaryCode;
+            rows = rows.Take(take).ToList();
+        }
+
+        return new OkObjectResult(new DictionaryListResponse { Items = rows, NextCursor = next });
     }
 
     /// <summary>
@@ -34,7 +54,28 @@ public sealed class MetadataService
     /// </summary>
     public ActionResult<DictionaryPassport> Get(string dictionaryCode)
     {
-        return new OkObjectResult(Passport(dictionaryCode, includeVersions: true));
+        Console.WriteLine($"Get {dictionaryCode}");
+        using var connection = Db.Open(configuration);
+        var passport = connection.QueryFirstOrDefault<DictionaryPassport>(
+            $"SELECT dictionary_id, dictionary_code, dictionary_name, owner, source, status, table_name, schema_name FROM dictionary WHERE dictionary_code = '{dictionaryCode}'");
+        if (passport is null)
+            return new NotFoundObjectResult(new AdminErrorResponse { Error = "dictionary_not_found", DictionaryCode = dictionaryCode });
+
+        var versions = connection.Query<DictionaryVersion>(
+            $"SELECT dictionary_version_id, version_id, status, valid_from, valid_to, table_name, schema_name FROM dictionary_version WHERE dictionary_id = '{passport.DictionaryId}' ORDER BY version_id").ToList();
+
+        return new OkObjectResult(new DictionaryPassport
+        {
+            DictionaryId = passport.DictionaryId,
+            DictionaryCode = passport.DictionaryCode,
+            DictionaryName = passport.DictionaryName,
+            Owner = passport.Owner,
+            Source = passport.Source,
+            Status = passport.Status,
+            TableName = passport.TableName,
+            SchemaName = passport.SchemaName,
+            Versions = versions
+        });
     }
 
     /// <summary>
