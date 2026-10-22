@@ -36,5 +36,14 @@ services:
       postgres:
         condition: service_healthy
 
+  import.api:
+    image: ${DOCKER_REGISTRY-}import-api
+    build:
+      context: ..
+      dockerfile: import.api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
