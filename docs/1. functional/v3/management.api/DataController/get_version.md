@@ -3,7 +3,7 @@
 # Описание
 
 GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
-Отдать данные версии JSON-файлом: черновик, действующую или закрытую. У `archived` строк нет.
+Поиск строк версии. Черновик, действующая и закрытая ищутся одинаково. У `archived` строк нет.
 
 # Входные параметры
 
@@ -13,23 +13,34 @@ GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 + `version_id`:
     + path
     + Обязательно
++ `query`:
+    + query
+    + Не обязательно
+    + Подстрока поиска без учёта регистра
+    + Пустое значение — без фильтра по тексту
++ `limit`:
+    + query
+    + Не обязательно
+    + integer, от 1 до 1000, по умолчанию 100
++ `cursor`:
+    + query
+    + Не обязательно
+    + Последний `value_code` предыдущей страницы
 
 # Параметры ответа
 
-+ `Content-Type: application/json; charset=utf-8`
-+ `Content-Disposition: attachment; filename="{dictionary_code}_v{version_id}.json"`
 + `dictionary_code`
 + `version_id`
 + `version_status`
 + `valid_from`
 + `valid_to`
 + `archived` — `true`, когда `status = archived`
-+ `fields`
-+ `rows`:
++ `items`:
     + Массив, порядок по `value_code`
     + `value_code`
     + `name`
     + дополнительные поля строки
++ `next_cursor` — последний `value_code` страницы или пусто
 
 # Алгоритм работы
 
@@ -45,8 +56,15 @@ GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + Код: `version_archived`
     + Статус: `410`
     + Строки не читать
-4. Прочитать секцию `WHERE version_id = {version_id}` в порядке `value_code`. Черновик читается так же, как `active` и `closed`.
-5. Вернуть статус `200`. Файл в `db/sql-data` не писать.
+4. Проверить `limit` и `cursor`.
+    + `limit` вне 1…1000 или `cursor` не разбирается:
+        + Код: `invalid_request`
+        + Статус: `400`
+5. Прочитать секцию `WHERE version_id = {version_id}`.
+    + `query` передан — оставить строки, где `value_code` или `name` содержит эту подстроку без учёта регистра
+    + При курсоре `value_code` больше курсора
+    + Сортировка по `value_code`, предел `limit`
+6. Вернуть статус `200`. Ноль строк — пустой `items`. Если продолжать нечего, `next_cursor` пустой. Файл в `db/sql-data` не писать.
 
 ```mermaid
 flowchart TD
@@ -55,7 +73,13 @@ flowchart TD
   ver -->|нет| v404["404 version_not_found"]
   ver -->|да| st{"status"}
   st -->|archived| arc["410 version_archived"]
-  st -->|draft, active или closed| ok["200 JSON по value_code"]
+  st -->|draft, active или closed| page{"limit и cursor"}
+  page -->|нет| bad["400 invalid_request"]
+  page -->|да| q{"query передан"}
+  q -->|да| find["Страница по value_code и name"]
+  q -->|нет| all["Страница по value_code"]
+  find --> ok["200, items и next_cursor"]
+  all --> ok
 ```
 
-Черновик администратору отдаётся. `archived` в каталоге означает, что секция уже отсоединена и строк нет. Ответ — JSON в теле, файл в `db/sql-data` не создаётся.
+`query` — параметр строки запроса, не тело. Без него возвращается страница всех строк версии. Черновик администратору доступен. `archived` означает, что секция отсоединена и искать нечего.
