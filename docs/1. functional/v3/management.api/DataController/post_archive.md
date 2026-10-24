@@ -39,3 +39,19 @@ POST **/admin/dictionaries/{dictionary_code}/versions/{version_id}/archive**
         + Код: `archive_failed`
         + Статус: `500`
 6. Вернуть статус `204`. Строку каталога не удалять и её `status` не менять. SQL-файлы не писать и не удалять.
+
+```mermaid
+flowchart TD
+  pas{"Паспорт"} -->|нет| d404["404 dictionary_not_found"]
+  pas -->|да| ver{"Версия"}
+  ver -->|нет| v404["404 version_not_found"]
+  ver -->|да| st{"status = closed"}
+  st -->|нет| c409["409 version_not_closed"]
+  st -->|да| sec{"Секция присоединена"}
+  sec -->|нет| same["204 без DETACH"]
+  sec -->|да| detach["DETACH PARTITION"]
+  detach -->|ошибка| fail["500 archive_failed"]
+  detach -->|да| ok["204"]
+```
+
+Повтор уже архивированной версии снова даёт `204` и секцию не трогает. Строка `dictionary_version` остаётся со статусом `closed`.

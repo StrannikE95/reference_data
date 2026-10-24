@@ -106,3 +106,25 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
         + Статус: `500`
         + Транзакция откатывается, уже записанный SQL-файл остаётся
 12. Зафиксировать транзакцию. Версия остаётся `draft`. Вернуть статус `201`, `data_sql_path` и `row_count`.
+
+```mermaid
+flowchart TD
+  edge{"Файл и дата"} -->|нет| http["400, 413, 415 или 422"]
+  edge -->|да| lock["Транзакция и FOR UPDATE"]
+  lock --> pas{"Паспорт active"}
+  pas -->|нет паспорта| d404["404 dictionary_not_found"]
+  pas -->|не active| ina["409 dictionary_inactive"]
+  pas -->|да| one{"Черновик уже есть"}
+  one -->|да| d409["409"]
+  one -->|нет| num{"version_id и valid_from"}
+  num -->|дата не годится| date["409 invalid_valid_from"]
+  num -->|да| json{"JSON и строки"}
+  json -->|нет| v422["422, SQL ещё нет"]
+  json -->|да| draft["INSERT draft и JSON_metadata"]
+  draft --> sql["SQL в db/sql-data"]
+  sql --> run["Секция и INSERT"]
+  run -->|ошибка| fail["500 script_failed, файл остаётся"]
+  run -->|да| done["COMMIT, 201, status draft"]
+```
+
+«JSON и строки» — разбор файла в память, путь на диск не задан. Снимок `JSON_metadata` — колонка `dictionary_version`. SQL в `db/sql-data` — секция и вставки, без смены статусов. После `COMMIT` версия остаётся `draft`, прежняя `active` не закрывается.

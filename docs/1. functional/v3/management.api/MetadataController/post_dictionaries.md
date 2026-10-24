@@ -88,3 +88,18 @@ POST **/admin/dictionaries**
         + Статус: `500`
         + Транзакция откатывается, уже записанный SQL-файл остаётся
 9. Зафиксировать транзакцию. Вернуть статус `201` и `metadata_sql_path`.
+
+```mermaid
+flowchart TD
+  body{"Тело"} -->|нет| bad["400 invalid_request"]
+  body -->|да| uniq{"Код свободен"}
+  uniq -->|нет| exists["409 dictionary_already_exists"]
+  uniq -->|да| meta["table_name и JSON_metadata"]
+  meta --> row["INSERT dictionary"]
+  row --> file["SQL в db/sql-schema"]
+  file --> exec["CREATE TABLE без секции"]
+  exec -->|ошибка| keep["500 script_failed, файл остаётся"]
+  exec -->|да| ok["COMMIT и 201"]
+```
+
+`JSON_metadata` пишется в колонку `dictionary`, отдельного JSON-файла нет. SQL — родительская таблица без секции и без строк. Ошибка выполнения откатывает паспорт и таблицу, уже записанный файл остаётся.

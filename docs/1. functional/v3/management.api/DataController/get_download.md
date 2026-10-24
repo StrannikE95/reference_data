@@ -50,3 +50,16 @@ GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}/download**
     + Строки не читать
 5. Прочитать секцию `WHERE version_id = {version_id}` в порядке `value_code`.
 6. Вернуть статус `200`. Файл в `db/sql-data` не писать.
+
+```mermaid
+flowchart TD
+  pas{"Паспорт"} -->|нет| d404["404 dictionary_not_found"]
+  pas -->|да| ver{"Версия"}
+  ver -->|нет| v404["404 version_not_found"]
+  ver -->|да| st{"Статус и секция"}
+  st -->|draft| nr["409 version_not_ready"]
+  st -->|секция отсоединена| arc["410 version_archived"]
+  st -->|active или closed| ok["200 JSON по value_code"]
+```
+
+Черновик не скачивается. Отсоединённая секция не читается. Ответ — JSON в теле, файл в `db/sql-data` не создаётся.

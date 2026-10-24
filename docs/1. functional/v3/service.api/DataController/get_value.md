@@ -72,3 +72,30 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
     + Строка есть — `result = present`
     + Строки нет — `result = absent`, `name` пусто
 6. Вернуть статус `200`.
+
+```mermaid
+flowchart TD
+  both{"on_date и version_id вместе"} -->|да| conflict["400 version_selector_conflict"]
+  both -->|нет| fmt{"Формат даты"}
+  fmt -->|нет| bad["400 invalid_request"]
+  fmt -->|да| pas{"Паспорт"}
+  pas -->|нет| d404["404 dictionary_not_found"]
+  pas -->|да| mode{"Что передано"}
+  mode -->|ничего| active{"Есть active"}
+  mode -->|on_date| period{"Есть период"}
+  mode -->|version_id| byId{"Есть строка"}
+  active -->|нет| noAct["404 no_active_version"]
+  period -->|нет| oor["404 date_out_of_range"]
+  byId -->|нет| nf["404 version_not_found"]
+  active -->|да| draft{"status = draft"}
+  period -->|да| draft
+  byId -->|да| draft
+  draft -->|да| np["409 version_not_published"]
+  draft -->|нет| arch{"Секция отсоединена"}
+  arch -->|да| gone["200 result = archived"]
+  arch -->|нет| q{"Строка по value_code"}
+  q -->|есть| pres["200 result = present"]
+  q -->|нет| abs["200 result = absent"]
+```
+
+Пустой селектор берёт действующую версию. `on_date` берёт период, куда дата входит включительно; при нескольких строках — больший `version_id`. `absent` и `archived` — успешный `200`.

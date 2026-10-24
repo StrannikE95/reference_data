@@ -58,3 +58,19 @@ POST **/dictionaries/{dictionary_code}/values/check**
     + Найден — `present`
     + Не найден — `absent`, `name` пусто
 6. Вернуть статус `200`. В БД и файлы не писать.
+
+```mermaid
+flowchart TD
+  body{"version_id и коды"} -->|нет| bad["400 invalid_request"]
+  body -->|да| pas{"Паспорт"}
+  pas -->|нет| d404["404 dictionary_not_found"]
+  pas -->|да| ver{"Версия"}
+  ver -->|нет| nf["404 version_not_found"]
+  ver -->|draft| np["409 version_not_published"]
+  ver -->|active или closed| arch{"Секция отсоединена"}
+  arch -->|да| allA["200, все result = archived"]
+  arch -->|нет| q["SELECT по списку кодов"]
+  q --> mix["200, present или absent"]
+```
+
+Дата здесь не выбирает редакцию: секция берётся по `version_id` из тела. Повторы кодов в ответе схлопываются в один. Архив не ошибка: у всех кодов `result = archived`.

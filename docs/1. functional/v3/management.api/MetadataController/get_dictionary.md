@@ -47,3 +47,14 @@ GET **/admin/dictionaries/{dictionary_code}**
 3. Прочитать `dictionary_version` этого `dictionary_id`, сортировка `version_id` по убыванию.
 4. Для каждой версии вычислить `archived`: секция `public.{table_name}_{version_id}` отсутствует.
 5. Вернуть статус `200`. Секцию не читать.
+
+```mermaid
+flowchart TD
+  find{"Паспорт по коду"} -->|нет| nf["404 dictionary_not_found"]
+  find -->|да| meta["fields из JSON_metadata"]
+  meta --> vers["Версии по version_id"]
+  vers --> arch["archived по секции"]
+  arch --> ok["200"]
+```
+
+`archived` считается по отсутствию секции `public.{table_name}_{version_id}`. Строки секции не читаются.

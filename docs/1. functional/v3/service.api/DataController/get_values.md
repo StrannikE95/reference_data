@@ -75,3 +75,29 @@ GET **/dictionaries/{dictionary_code}/values**
 4. Секция отсоединена — вернуть статус `200`, `archived: true`, `items` пустой. Таблицу не читать.
 5. Выбрать строки секции: `version_id` равен выбранному, при курсоре `value_code` больше курсора, сортировка по `value_code`, предел `limit`.
 6. Вернуть статус `200`. Ноль строк — пустой `items`. Если продолжать нечего, `next_cursor` пустой.
+
+```mermaid
+flowchart TD
+  both{"on_date и version_id вместе"} -->|да| conflict["400 version_selector_conflict"]
+  both -->|нет| fmt{"Дата, limit, cursor"}
+  fmt -->|нет| bad["400 invalid_request"]
+  fmt -->|да| pas{"Паспорт"}
+  pas -->|нет| d404["404 dictionary_not_found"]
+  pas -->|да| mode{"Что передано"}
+  mode -->|ничего| active{"Есть active"}
+  mode -->|on_date| period{"Есть период"}
+  mode -->|version_id| byId{"Есть строка"}
+  active -->|нет| noAct["404 no_active_version"]
+  period -->|нет| oor["404 date_out_of_range"]
+  byId -->|нет| nf["404 version_not_found"]
+  active -->|да| draft{"status = draft"}
+  period -->|да| draft
+  byId -->|да| draft
+  draft -->|да| np["409 version_not_published"]
+  draft -->|нет| arch{"Секция отсоединена"}
+  arch -->|да| emptyA["200, items пусто"]
+  arch -->|нет| page["Страница по value_code"]
+  page --> ok["200, items и next_cursor"]
+```
+
+Редакция выбирается так же, как у одного значения. Курсор — последний `value_code` предыдущей страницы той же редакции. Отсоединённая секция отдаёт пустой `items` и `archived: true`.

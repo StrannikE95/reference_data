@@ -41,3 +41,13 @@ GET **/admin/dictionaries**
     + Нет — `active_version_id` пустой
 4. Если страниц больше нет, `next_cursor` пустой.
 5. Вернуть статус `200`.
+
+```mermaid
+flowchart TD
+  check{"limit и cursor"} -->|нет| bad["400 invalid_request"]
+  check -->|да| page["Страница dictionary по dictionary_code"]
+  page --> active["active_version_id из версии active"]
+  active --> ok["200 и next_cursor"]
+```
+
+`limit` и `cursor` проверяются до чтения. `active_version_id` пустой, если действующей версии нет. Файлы метод не пишет.

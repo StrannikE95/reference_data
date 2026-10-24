@@ -53,3 +53,23 @@ POST **/admin/dictionaries/{dictionary_code}/versions/{version_id}/publish**
     + Действующей нет — оба поля ответа пустые, закрывающий `UPDATE` не выполнять
 8. Перевести черновик в `active`. `valid_from` не перезаписывать. `valid_to` остаётся пустым. Строки и секцию не менять.
 9. Зафиксировать транзакцию. Вернуть статус `200`. Свой SQL-файл не создавать.
+
+```mermaid
+flowchart TD
+  lock["Транзакция и FOR UPDATE"] --> pas{"Паспорт"}
+  pas -->|нет| d404["404 dictionary_not_found"]
+  pas -->|не active| ina["409 dictionary_inactive"]
+  pas -->|да| ver{"Строка версии"}
+  ver -->|нет| v404["404 version_not_found"]
+  ver -->|да| st{"status = draft"}
+  st -->|нет| bad["409"]
+  st -->|да| sec{"Секция есть"}
+  sec -->|нет| arc["410 version_archived"]
+  sec -->|да| prev{"Есть прежняя active"}
+  prev -->|да| close["UPDATE прежней в closed"]
+  prev -->|нет| act["UPDATE черновика в active"]
+  close --> act
+  act --> done["COMMIT и 200"]
+```
+
+Закрытие прежней версии ставит `valid_to` на день раньше `valid_from` черновика. Смена статусов — `UPDATE` в этой транзакции, своего SQL-файла нет. Секцию и строки метод не переписывает.
