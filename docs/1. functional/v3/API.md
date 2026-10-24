@@ -2,12 +2,12 @@
 
 | Контроллер | Метод | Описание |
 | --- | --- | --- |
-| MetadataController | `GET /admin/dictionaries` | [Страница паспортов](management.api/MetadataController/get_dictionaries.md) |
-| MetadataController | `GET /admin/dictionaries/{dictionary_code}` | [Паспорт, поля и версии](management.api/MetadataController/get_dictionary.md) |
-| MetadataController | `POST /admin/dictionaries` | [Создать справочник и пустую таблицу](management.api/MetadataController/post_dictionaries.md) |
+| MetadataController | `POST /admin/passports` | [Создать справочник и пустую таблицу](management.api/MetadataController/post_passports.md) |
+| DataController | `GET /admin/passports` | [Получить список паспортов](management.api/DataController/get_passports.md) |
+| DataController | `GET /admin/passports/{dictionary_code}` | [Получить паспорт, поля и версии](management.api/DataController/get_passport.md) |
 | DataController | `POST /admin/dictionaries/{dictionary_code}/versions` | [Загрузить файл, оставить черновик](management.api/DataController/post_versions.md) |
 | DataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/publish` | [Опубликовать черновик](management.api/DataController/post_publish.md) |
-| DataController | `GET /admin/dictionaries/{dictionary_code}/versions/{version_id}/download` | [Скачать версию JSON-файлом](management.api/DataController/get_download.md) |
+| DataController | `GET /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Версия JSON-файлом](management.api/DataController/get_version.md) |
 | DataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/archive` | [Отсоединить секцию закрытой версии](management.api/DataController/post_archive.md) |
 | DataController | `GET /dictionaries/{dictionary_code}/values/{value_code}` | [Одно значение выбранной редакции](service.api/DataController/get_value.md) |
 | DataController | `GET /dictionaries/{dictionary_code}/values` | [Страница значений той же редакции](service.api/DataController/get_values.md) |

@@ -2,7 +2,7 @@
 
 # Описание
 
-GET **/admin/dictionaries/{dictionary_code}**
+GET **/admin/passports/{dictionary_code}**
 Паспорт, описание полей и версии справочника. Строк значений нет.
 
 # Входные параметры

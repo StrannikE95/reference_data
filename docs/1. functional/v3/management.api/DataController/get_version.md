@@ -2,7 +2,7 @@
 
 # Описание
 
-GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}/download**
+GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 Отдать действующую или закрытую версию JSON-файлом.
 
 # Входные параметры
