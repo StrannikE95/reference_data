@@ -90,7 +90,6 @@ POST **/admin/dictionaries/{dictionary_code}**
     + `status = draft`
     + `valid_from` — дата из формы
     + `valid_to` пусто
-    + копия `JSON_metadata` паспорта
     + `table_name` паспорта
     + `schema_name` пусто
     + Прежняя `active` не меняется
@@ -122,11 +121,11 @@ flowchart TD
   num -->|дата не годится| date["409 invalid_valid_from"]
   num -->|да| json{"JSON и строки"}
   json -->|нет| v422["422, SQL ещё нет"]
-  json -->|да| draft["INSERT draft и JSON_metadata"]
+  json -->|да| draft["INSERT draft"]
   draft --> sql["SQL в db/sql-data"]
   sql --> run["Секция и INSERT"]
   run -->|ошибка| fail["500 script_failed, файл остаётся"]
   run -->|да| done["COMMIT, 201, status draft"]
 ```
 
-«JSON и строки» — разбор файла в память, путь на диск не задан. Снимок `JSON_metadata` — колонка `dictionary_version`. SQL в `db/sql-data` — секция и вставки, без смены статусов. После `COMMIT` версия остаётся `draft`, прежняя `active` не закрывается. Новый номер возвращается в `version_id`.
+«JSON и строки» — разбор файла в память, путь на диск не задан. Описание полей остаётся в `dictionary.JSON_metadata`. SQL в `db/sql-data` — секция и вставки, без смены статусов. После `COMMIT` версия остаётся `draft`, прежняя `active` не закрывается. Новый номер возвращается в `version_id`.

@@ -17,7 +17,6 @@ GET **/admin/passports/{dictionary_code}**
 + `dictionary_code`
 + `dictionary_name`
 + `owner` — может быть пустым
-+ `source` — может быть пустым
 + `status`
 + `table_name`
 + `schema_name` — для простого списка пусто

@@ -12,7 +12,6 @@ erDiagram
         varchar dictionary_code UK
         varchar dictionary_name
         varchar owner
-        varchar source
         varchar status
         varchar JSON_metadata
     }
@@ -24,7 +23,6 @@ erDiagram
         date valid_from
         date valid_to
         varchar status
-        varchar JSON_metadata
         varchar table_name
         varchar schema_name
     }
@@ -38,13 +36,15 @@ erDiagram
 
 ## Таблица `dictionary`
 
+Реестр справочников.
+Содержит метаданные справочника (код, название, владелец, состояние и схему структуры данных)
+
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
 | `dictionary_id` | `uuid` | `PK` | Внутренний идентификатор справочника |
 | `dictionary_code` | `varchar(63)` | `NOT NULL` | Устойчивый код справочника |
 | `dictionary_name` | `varchar(200)` | `NOT NULL` | Название для человека |
 | `owner` | `varchar(200)` | `NULL` | Предметный владелец |
-| `source` | `varchar(200)` | `NULL` | Источник состава |
 | `status` | `varchar(16)` | `NOT NULL`, по умолчанию `active` | `active` — паспорт принимает версии, `inactive` — нет |
 | `JSON_metadata` | `varchar` | `NOT NULL` | Текущее описание полей, пока и после появления версий |
 
@@ -55,6 +55,9 @@ erDiagram
 
 ## Таблица `dictionary_version`
 
+Реестр версий справочников.
+Содержит метаданные версий справочника (номер версии, интервал дат, на котором эта версия справочника была актуальной, текущий статус, название таблицы или схемы таблиц справочника)
+
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
 | `dictionary_version_id` | `uuid` | `PK` | Внутренний идентификатор версии |
@@ -63,7 +66,6 @@ erDiagram
 | `valid_from` | `date` | `NULL` | Дата начала действия. Пустая только у черновика |
 | `valid_to` | `date` | `NULL` | Дата окончания. Пустая у `draft` и `active` |
 | `status` | `varchar(16)` | `NOT NULL` | `draft`, `active`, `closed` или `archived` |
-| `JSON_metadata` | `varchar` | `NOT NULL` | Снимок описания полей на момент версии |
 | `table_name` | `varchar(63)` | `NULL` | Имя таблицы простого списка |
 | `schema_name` | `varchar(63)` | `NULL` | Имя схемы набора таблиц. Для простого списка пусто |
 
@@ -114,38 +116,3 @@ erDiagram
 
 + `dictionary 1 -> N dictionary_version`
 + `dictionary_version 1 -> N` строк своей секции в таблице `table_name`
-
-# Основные сценарии запросов к БД
-
-## Создание паспорта
-
-`POST /admin/passports` в одном запросе:
-
-+ вставить строку `dictionary` со `status = active` и `JSON_metadata`
-+ создать пустую секционированную таблицу без секций и без строк
-
-## Создание черновика
-
-`POST /admin/dictionaries/{dictionary_code}` в одном запросе:
-
-+ убедиться, что строки `draft` у этого `dictionary_id` ещё нет
-+ вставить `dictionary_version` со `status = draft` и копией `JSON_metadata`
-+ создать секцию и вставить строки данных
-
-## Поиск версий
-
-`GET /admin/dictionaries/{dictionary_code}/versions` читает `dictionary_version` по `dictionary_id`. При переданном `status` оставляет только его. Строки данных не читаются. `archived` в ответе — это `status = archived`.
-
-## Поиск строк версии
-
-`GET /admin/dictionaries/{dictionary_code}/versions/{version_id}` по номеру находит строку версии. При `status = archived` секцию не читает. Иначе читает страницу секции; `query` оставляет строки, где `value_code` или `name` содержит подстроку.
-
-## Чтение значения сервисом
-
-Сервис выбирает одну строку `dictionary_version`:
-
-+ без селектора — `status = active`
-+ по `on_date` — период среди `active`, `closed` и `archived`
-+ по `version_id` — эту строку
-
-`draft` в ответ не входит. `archived` возвращается без чтения секции. `active` и `closed` читают `value_code` и `name` из секции.

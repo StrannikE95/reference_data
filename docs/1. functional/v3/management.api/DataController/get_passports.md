@@ -24,7 +24,6 @@ GET **/admin/passports**
     + `dictionary_code`
     + `dictionary_name`
     + `owner` — может быть пустым
-    + `source` — может быть пустым
     + `status`
     + `active_version_id` — номер версии со статусом `active` или пусто
 + `next_cursor` — пусто, если страниц больше нет
