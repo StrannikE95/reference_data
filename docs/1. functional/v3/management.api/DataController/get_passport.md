@@ -33,9 +33,9 @@ GET **/admin/passports/{dictionary_code}**
     + `dictionary_version_id`
     + `version_id`
     + `status`
-    + `valid_from` — у черновика может быть пустым
-    + `valid_to` — заполнен только у закрытой версии
-    + `archived`
+    + `valid_from`
+    + `valid_to` — заполнен у `closed` и `archived`
+    + `archived` — `true`, когда `status = archived`
 
 # Алгоритм работы
 
@@ -45,7 +45,7 @@ GET **/admin/passports/{dictionary_code}**
         + Статус: `404`
 2. Собрать `fields`, `table_name` и `schema_name` из `dictionary.JSON_metadata`.
 3. Прочитать `dictionary_version` этого `dictionary_id`, сортировка `version_id` по убыванию.
-4. Для каждой версии вычислить `archived`: секция `public.{table_name}_{version_id}` отсутствует.
+4. Для каждой версии `archived = (status = archived)`.
 5. Вернуть статус `200`. Секцию не читать.
 
 ```mermaid
@@ -53,8 +53,8 @@ flowchart TD
   find{"Паспорт по коду"} -->|нет| nf["404 dictionary_not_found"]
   find -->|да| meta["fields из JSON_metadata"]
   meta --> vers["Версии по version_id"]
-  vers --> arch["archived по секции"]
+  vers --> arch["archived из status"]
   arch --> ok["200"]
 ```
 
-`archived` считается по отсутствию секции `public.{table_name}_{version_id}`. Строки секции не читаются.
+`archived` берётся из записанного статуса версии. Строки секции не читаются.

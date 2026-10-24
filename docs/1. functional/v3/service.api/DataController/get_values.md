@@ -72,9 +72,9 @@ GET **/dictionaries/{dictionary_code}/values**
     + Выбранная версия в `draft`:
         + Код: `version_not_published`
         + Статус: `409`
-4. Секция отсоединена — вернуть статус `200`, `archived: true`, `items` пустой. Таблицу не читать.
-5. Выбрать строки секции: `version_id` равен выбранному, при курсоре `value_code` больше курсора, сортировка по `value_code`, предел `limit`.
-6. Вернуть статус `200`. Ноль строк — пустой `items`. Если продолжать нечего, `next_cursor` пустой.
+    + Выбранная версия в `archived` — вернуть статус `200`, `archived: true`, `items` пустой. Таблицу не читать
+4. Выбрать строки секции: `version_id` равен выбранному, при курсоре `value_code` больше курсора, сортировка по `value_code`, предел `limit`.
+5. Вернуть статус `200`. Ноль строк — пустой `items`. Если продолжать нечего, `next_cursor` пустой.
 
 ```mermaid
 flowchart TD
@@ -90,14 +90,13 @@ flowchart TD
   active -->|нет| noAct["404 no_active_version"]
   period -->|нет| oor["404 date_out_of_range"]
   byId -->|нет| nf["404 version_not_found"]
-  active -->|да| draft{"status = draft"}
-  period -->|да| draft
-  byId -->|да| draft
-  draft -->|да| np["409 version_not_published"]
-  draft -->|нет| arch{"Секция отсоединена"}
-  arch -->|да| emptyA["200, items пусто"]
-  arch -->|нет| page["Страница по value_code"]
+  active -->|да| st{"Статус версии"}
+  period -->|да| st
+  byId -->|да| st
+  st -->|draft| np["409 version_not_published"]
+  st -->|archived| emptyA["200, items пусто"]
+  st -->|active или closed| page["Страница по value_code"]
   page --> ok["200, items и next_cursor"]
 ```
 
-Редакция выбирается так же, как у одного значения. Курсор — последний `value_code` предыдущей страницы той же редакции. Отсоединённая секция отдаёт пустой `items` и `archived: true`.
+Редакция выбирается так же, как у одного значения. Курсор — последний `value_code` предыдущей страницы той же редакции. Статус `archived` отдаёт пустой `items` и `archived: true`.

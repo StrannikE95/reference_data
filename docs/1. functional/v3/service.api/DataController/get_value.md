@@ -34,7 +34,7 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
 + `result`:
     + `present` — код есть, `name` заполнен
     + `absent` — версии код нет, `name` пусто
-    + `archived` — секция отсоединена, `name` пусто
+    + `archived` — статус версии `archived`, `name` пусто
 + `value_code`
 + `name`
 
@@ -67,11 +67,11 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
     + Выбранная версия в `draft`:
         + Код: `version_not_published`
         + Статус: `409`
-4. Секция отсоединена — вернуть статус `200`, `archived: true`, `result = archived`, `name` пусто. Таблицу не читать.
-5. Иначе выбрать `value_code`, `name` из таблицы справочника по `version_id` и `value_code`.
+    + Выбранная версия в `archived` — вернуть статус `200`, `archived: true`, `result = archived`, `name` пусто. Таблицу не читать
+4. Иначе выбрать `value_code`, `name` из таблицы справочника по `version_id` и `value_code`.
     + Строка есть — `result = present`
     + Строки нет — `result = absent`, `name` пусто
-6. Вернуть статус `200`.
+5. Вернуть статус `200`.
 
 ```mermaid
 flowchart TD
@@ -87,15 +87,14 @@ flowchart TD
   active -->|нет| noAct["404 no_active_version"]
   period -->|нет| oor["404 date_out_of_range"]
   byId -->|нет| nf["404 version_not_found"]
-  active -->|да| draft{"status = draft"}
-  period -->|да| draft
-  byId -->|да| draft
-  draft -->|да| np["409 version_not_published"]
-  draft -->|нет| arch{"Секция отсоединена"}
-  arch -->|да| gone["200 result = archived"]
-  arch -->|нет| q{"Строка по value_code"}
+  active -->|да| st{"Статус версии"}
+  period -->|да| st
+  byId -->|да| st
+  st -->|draft| np["409 version_not_published"]
+  st -->|archived| gone["200 result = archived"]
+  st -->|active или closed| q{"Строка по value_code"}
   q -->|есть| pres["200 result = present"]
   q -->|нет| abs["200 result = absent"]
 ```
 
-Пустой селектор берёт действующую версию. `on_date` берёт период, куда дата входит включительно; при нескольких строках — больший `version_id`. `absent` и `archived` — успешный `200`.
+Пустой селектор берёт действующую версию. `on_date` берёт период, куда дата входит включительно, среди `active`, `closed` и `archived`; черновик в период не входит. При нескольких строках берётся больший `version_id`. Статус `archived` отдаёт `result = archived` без чтения секции. `absent` и `archived` — успешный `200`.

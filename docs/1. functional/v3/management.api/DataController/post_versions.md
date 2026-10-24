@@ -2,8 +2,8 @@
 
 # Описание
 
-POST **/admin/dictionaries/{dictionary_code}/versions**
-Принять файл строк и оставить версию черновиком. Публикация — [Опубликовать черновик](post_publish.md).
+POST **/admin/dictionaries/{dictionary_code}**
+Принять файл строк и создать черновик. Ответ содержит новый `version_id`. Пока черновик есть, повторный вызов — `409`. Замена черновика — [удалить](delete_version.md) его и вызвать создание снова. Публикация — [смена статуса](patch_version.md).
 
 # Входные параметры
 
@@ -60,7 +60,9 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
     + Статус: `409`
     + SQL не писать
 6. `version_id = max(version_id) + 1`. Версий нет — номер 1.
-7. Если есть версия со `status = active`, `valid_from` новой строго позже её `valid_from`.
+7. Проверить `valid_from`.
+    + Есть версия со `status = active`: новая дата строго позже её `valid_from`
+    + Действующей нет, но есть `closed` или `archived`: новая дата строго позже максимального `valid_to`
     + Иначе:
         + Код: `invalid_valid_from`
         + Статус: `409`
@@ -127,4 +129,4 @@ flowchart TD
   run -->|да| done["COMMIT, 201, status draft"]
 ```
 
-«JSON и строки» — разбор файла в память, путь на диск не задан. Снимок `JSON_metadata` — колонка `dictionary_version`. SQL в `db/sql-data` — секция и вставки, без смены статусов. После `COMMIT` версия остаётся `draft`, прежняя `active` не закрывается.
+«JSON и строки» — разбор файла в память, путь на диск не задан. Снимок `JSON_metadata` — колонка `dictionary_version`. SQL в `db/sql-data` — секция и вставки, без смены статусов. После `COMMIT` версия остаётся `draft`, прежняя `active` не закрывается. Новый номер возвращается в `version_id`.

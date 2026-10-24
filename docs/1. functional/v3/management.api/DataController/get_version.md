@@ -3,7 +3,7 @@
 # Описание
 
 GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
-Отдать действующую или закрытую версию JSON-файлом.
+Отдать данные версии JSON-файлом: черновик, действующую или закрытую. У `archived` строк нет.
 
 # Входные параметры
 
@@ -23,7 +23,7 @@ GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 + `version_status`
 + `valid_from`
 + `valid_to`
-+ `archived`
++ `archived` — `true`, когда `status = archived`
 + `fields`
 + `rows`:
     + Массив, порядок по `value_code`
@@ -41,25 +41,21 @@ GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + Нет строки:
         + Код: `version_not_found`
         + Статус: `404`
-3. `status = draft`:
-    + Код: `version_not_ready`
-    + Статус: `409`
-4. Секция отсоединена:
+3. `status = archived`:
     + Код: `version_archived`
     + Статус: `410`
     + Строки не читать
-5. Прочитать секцию `WHERE version_id = {version_id}` в порядке `value_code`.
-6. Вернуть статус `200`. Файл в `db/sql-data` не писать.
+4. Прочитать секцию `WHERE version_id = {version_id}` в порядке `value_code`. Черновик читается так же, как `active` и `closed`.
+5. Вернуть статус `200`. Файл в `db/sql-data` не писать.
 
 ```mermaid
 flowchart TD
   pas{"Паспорт"} -->|нет| d404["404 dictionary_not_found"]
   pas -->|да| ver{"Версия"}
   ver -->|нет| v404["404 version_not_found"]
-  ver -->|да| st{"Статус и секция"}
-  st -->|draft| nr["409 version_not_ready"]
-  st -->|секция отсоединена| arc["410 version_archived"]
-  st -->|active или closed| ok["200 JSON по value_code"]
+  ver -->|да| st{"status"}
+  st -->|archived| arc["410 version_archived"]
+  st -->|draft, active или closed| ok["200 JSON по value_code"]
 ```
 
-Черновик не скачивается. Отсоединённая секция не читается. Ответ — JSON в теле, файл в `db/sql-data` не создаётся.
+Черновик администратору отдаётся. `archived` в каталоге означает, что секция уже отсоединена и строк нет. Ответ — JSON в теле, файл в `db/sql-data` не создаётся.

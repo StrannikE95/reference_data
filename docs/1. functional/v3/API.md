@@ -5,10 +5,11 @@
 | MetadataController | `POST /admin/passports` | [Создать справочник и пустую таблицу](management.api/MetadataController/post_passports.md) |
 | DataController | `GET /admin/passports` | [Получить список паспортов](management.api/DataController/get_passports.md) |
 | DataController | `GET /admin/passports/{dictionary_code}` | [Получить паспорт, поля и версии](management.api/DataController/get_passport.md) |
-| DataController | `POST /admin/dictionaries/{dictionary_code}/versions` | [Загрузить файл, оставить черновик](management.api/DataController/post_versions.md) |
-| DataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/publish` | [Опубликовать черновик](management.api/DataController/post_publish.md) |
-| DataController | `GET /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Версия JSON-файлом](management.api/DataController/get_version.md) |
-| DataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/archive` | [Отсоединить секцию закрытой версии](management.api/DataController/post_archive.md) |
+| DataController | `POST /admin/dictionaries/{dictionary_code}` | [Создать черновик](management.api/DataController/post_versions.md) |
+| DataController | `GET /admin/dictionaries/{dictionary_code}/versions` | [Поиск версий по условию](management.api/DataController/get_versions.md) |
+| DataController | `GET /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Данные версии](management.api/DataController/get_version.md) |
+| DataController | `PATCH /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Сменить статус версии](management.api/DataController/patch_version.md) |
+| DataController | `DELETE /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Удалить черновик](management.api/DataController/delete_version.md) |
 | DataController | `GET /dictionaries/{dictionary_code}/values/{value_code}` | [Одно значение выбранной редакции](service.api/DataController/get_value.md) |
 | DataController | `GET /dictionaries/{dictionary_code}/values` | [Страница значений той же редакции](service.api/DataController/get_values.md) |
 | DataController | `POST /dictionaries/{dictionary_code}/values/check` | [Проверить коды в указанной версии](service.api/DataController/post_check.md) |
@@ -27,9 +28,8 @@
 |409|`dictionary_inactive`|Справочник не принимает новые версии|-|
 |409|`invalid_valid_from`|Дата начала действия не проходит проверку|-|
 |409|`version_not_published`|Версия ещё черновик|-|
-|409|`version_not_ready`|Версию ещё нельзя скачать|-|
-|409|`version_not_closed`|Версия не закрыта|-|
-|410|`version_archived`|Секция версии отсоединена|-|
+|409|`version_not_closed`|В `archived` переводится только закрытая версия|-|
+|410|`version_archived`|Версия в статусе `archived`, строки недоступны|-|
 |413|`file_too_large`|Файл больше 100 МБ|-|
 |415|`unsupported_media_type`|Допустимы CSV и JSON|-|
 |422|`empty_file`|Файл пуст|-|
