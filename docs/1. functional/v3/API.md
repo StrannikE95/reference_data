@@ -3,6 +3,7 @@
 | Проект | Контроллер | Метод | Описание |
 | --- | --- | --- | --- |
 | admin | MetadataController | `POST /admin/passports` | [Создать справочник и пустую таблицу](management.api/MetadataController/post_passports.md) |
+| admin | MetadataController | `PATCH /admin/passports/{dictionary_code}` | [Изменить паспорт](management.api/MetadataController/patch_passport.md) |
 | admin | DataController | `GET /admin/passports` | [Получить список паспортов](management.api/DataController/get_passports.md) |
 | admin | DataController | `GET /admin/passports/{dictionary_code}` | [Получить паспорт, поля и версии](management.api/DataController/get_passport.md) |
 | admin | DataController | `POST /admin/dictionaries/{dictionary_code}` | [Создать черновик](management.api/DataController/post_versions.md) |
