@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Новый справочник</title>
+  <style>
+    body { font: 14px sans-serif; margin: 24px; }
+    h1 { font-size: 18px; }
+    label { display: block; margin: 10px 0; }
+    input, select { margin-left: 8px; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; }
+    button { margin: 0 8px 8px 0; }
+    .hint { color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Новый справочник</h1>
+  <label>Название * <input value="Материал стен"></label>
+  <label>Код * <input value="WallMaterial"></label>
+  <label>Владелец <input value="Имущество"></label>
+  <h2>Дополнительные поля</h2>
+  <p class="hint">Код значения и подпись в эту таблицу не добавляются. Они есть у каждой строки данных.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Тип</th>
+        <th>Поле</th>
+        <th>Название</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <select>
+            <option>Строка</option>
+            <option>Целое</option>
+            <option>Большое целое</option>
+            <option>Дата</option>
+            <option>UUID</option>
+          </select>
+        </td>
+        <td><input value="parent_code"></td>
+        <td><input value="Родительский код"></td>
+        <td><button>Удалить</button></td>
+      </tr>
+      <tr>
+        <td>
+          <select>
+            <option>Строка</option>
+          </select>
+        </td>
+        <td><input placeholder="код поля"></td>
+        <td><input placeholder="подпись поля"></td>
+        <td><button>Удалить</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <button>Добавить новое поле</button>
+  <div>
+    <button>Создать</button>
+    <button>Отмена</button>
+  </div>
+</body>
+</html>
