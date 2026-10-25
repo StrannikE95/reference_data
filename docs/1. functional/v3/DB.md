@@ -53,11 +53,6 @@ erDiagram
 + `ux_dictionary_code` на `lower(dictionary_code)`
 + `dictionary_status_check`: `status` только `active` или `inactive`
 
-Правила работы:
-
-+ `dictionary_code` после создания не меняется
-+ `dictionary_name` и `owner` меняются отдельным сохранением паспорта. Версии и таблица данных при этом не меняются
-
 ## Таблица `dictionary_version`
 
 Реестр версий справочников.
@@ -88,7 +83,7 @@ erDiagram
 
 + у справочника не больше одной версии `active` и не больше одной `draft`
 + `POST /admin/dictionaries/{dictionary_code}` создаёт строку `draft`, секцию и строки данных. Повтор при живом черновике не создаёт вторую строку
-+ `PATCH` со `status = active` в одной транзакции переводит черновик в `active` и закрывает прежнюю `active`: `valid_to` — день перед `valid_from` новой
++ `PATCH` со `status = active` переводит этот черновик в `active` и в том же запросе закрывает прежнюю `active`: `valid_to` — день перед `valid_from` новой
 + `PATCH` со `status = closed` переводит текущую `active` в `closed` и записывает `valid_to` из запроса
 + `PATCH` со `status = archived` переводит `closed` в `archived` и в том же запросе отсоединяет секцию
 + `DELETE` удаляет строку только при `status = draft`, вместе с секцией и строками данных
