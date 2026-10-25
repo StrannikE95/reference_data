@@ -43,12 +43,12 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| `dictionary_id` | `uuid` | `PK` | Внутренний идентификатор справочника |
-| `dictionary_code` | `varchar(63)` | `NOT NULL` | Устойчивый код справочника |
-| `dictionary_name` | `varchar(200)` | `NOT NULL` | Название для человека |
-| `owner` | `varchar(200)` | `NULL` | Предметный владелец |
-| `status` | `varchar(16)` | `NOT NULL`, по умолчанию `active` | `active` — паспорт принимает версии, `inactive` — нет |
-| `JSON_metadata` | `varchar` | `NOT NULL` | Текущее описание полей, пока и после появления версий |
+| dictionary_id | uuid | PK | Внутренний идентификатор справочника |
+| dictionary_code | varchar(63) | NOT NULL | Устойчивый код справочника |
+| dictionary_name | varchar(200) | NOT NULL | Название для человека |
+| owner | varchar(200) | NULL | Предметный владелец |
+| status | varchar(16) | NOT NULL, по умолчанию active | active — паспорт принимает версии, inactive — нет |
+| JSON_metadata | varchar | NOT NULL | Текущее описание полей, пока и после появления версий |
 
 Индексы и ограничения:
 
@@ -62,14 +62,14 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| `dictionary_version_id` | `uuid` | `PK` | Внутренний идентификатор версии |
-| `dictionary_id` | `uuid` | `NOT NULL`, `FK -> dictionary.dictionary_id` | Паспорт справочника |
-| `version_id` | `integer` | `NOT NULL` | Номер версии внутри справочника, с 1 |
-| `valid_from` | `date` | `NULL` | Дата начала действия. Пустая только у черновика |
-| `valid_to` | `date` | `NULL` | Дата окончания. Пустая у `draft` и `active` |
-| `status` | `varchar(16)` | `NOT NULL` | `draft`, `active`, `closed` или `archived` |
-| `table_name` | `varchar(63)` | `NULL` | Имя таблицы простого списка |
-| `schema_name` | `varchar(63)` | `NULL` | Имя схемы набора таблиц. Для простого списка пусто |
+| dictionary_version_id | uuid | PK | Внутренний идентификатор версии |
+| dictionary_id | uuid | NOT NULL, FK -> dictionary.dictionary_id | Паспорт справочника |
+| version_id | integer | NOT NULL | Номер версии внутри справочника, с 1 |
+| valid_from | date | NULL | Дата начала действия. Пустая только у черновика |
+| valid_to | date | NULL | Дата окончания. Пустая у draft и active |
+| status | varchar(16) | NOT NULL | draft, active, closed или archived |
+| table_name | varchar(63) | NULL | Имя таблицы простого списка |
+| schema_name | varchar(63) | NULL | Имя схемы набора таблиц. Для простого списка пусто |
 
 Индексы и ограничения:
 
@@ -97,10 +97,10 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| `version_id` | `integer` | `NOT NULL`, входит в `PK` | Номер версии, значение секции |
-| `value_code` | `varchar(64)` | `NOT NULL`, входит в `PK` | Код значения внутри версии |
-| `name` | `varchar(500)` | `NOT NULL` | Подпись значения |
-| колонки из `fields` | по типу поля | `NULL` или `NOT NULL` | Дополнительные поля в порядке `JSON_metadata.fields` |
+| version_id | integer | NOT NULL, входит в PK | Номер версии, значение секции |
+| value_code | varchar(64) | NOT NULL, входит в PK | Код значения внутри версии |
+| name | varchar(500) | NOT NULL | Подпись значения |
+| колонки из fields | по типу поля | NULL или NOT NULL | Дополнительные поля в порядке JSON_metadata.fields |
 
 Индексы и ограничения:
 
