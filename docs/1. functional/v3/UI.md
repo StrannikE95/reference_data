@@ -2,6 +2,24 @@
 
 Экраны администратора справочников. UI работает с простыми списками: у справочника одна таблица данных и версии этой таблицы.
 
+Макеты экранов вставлены в этот файл. Откройте предпросмотр Markdown (`Ctrl+Shift+V`).
+
+<style>
+.screen { font: 14px/1.4 sans-serif; color: #222; background: #fff; border: 1px solid #bbb; padding: 16px 18px; margin: 8px 0 20px; }
+.screen h1 { font-size: 18px; margin: 0 0 12px; }
+.screen h2 { font-size: 16px; margin: 16px 0 8px; }
+.screen table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+.screen th, .screen td { border: 1px solid #999; padding: 6px 8px; text-align: left; vertical-align: top; }
+.screen button { margin: 0 8px 8px 0; }
+.screen label { display: block; margin: 10px 0; }
+.screen input, .screen select { margin-left: 8px; }
+.screen .empty, .screen .dialog, .screen .error, .screen .head { border: 1px solid #999; padding: 12px; margin-top: 16px; }
+.screen .head { margin-top: 0; margin-bottom: 12px; }
+.screen .dialog { max-width: 420px; }
+.screen .error { max-width: 520px; }
+.screen .hint { color: #333; }
+</style>
+
 ## 1. Общие правила
 
 - Справочник описывается полями «Код», «Название» и «Владелец».
@@ -26,7 +44,40 @@
 ## 2. Экраны
 ## 2.1. Экран «Справочники»
 
-[Пример экрана](ui/dictionaries.html)
+<div class="screen">
+  <h1>Справочники</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Код</th>
+        <th>Название</th>
+        <th>Владелец</th>
+        <th>Версия</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>WallMaterial</td>
+        <td>Материал стен</td>
+        <td>Имущество</td>
+        <td>3</td>
+        <td><button>Паспорт</button></td>
+      </tr>
+      <tr>
+        <td>OwnershipType</td>
+        <td>Вид собственности</td>
+        <td>—</td>
+        <td>—</td>
+        <td><button>Паспорт</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <button>Создать новый справочник</button>
+  <button>Загрузить ещё</button>
+  <p>Выбор строки открывает экран версий.</p>
+  <div class="empty">Справочников пока нет</div>
+</div>
 
 ### 2.1.1 Что отображается
 
@@ -48,7 +99,55 @@
 
 ## 2.2. Экран «Новый справочник»
 
-[Пример экрана](ui/new-dictionary.html)
+<div class="screen">
+  <h1>Новый справочник</h1>
+  <label>Название * <input value="Материал стен"></label>
+  <label>Код * <input value="WallMaterial"></label>
+  <label>Владелец <input value="Имущество"></label>
+  <h2>Дополнительные поля</h2>
+  <p class="hint">Код значения и подпись в эту таблицу не добавляются. Они есть у каждой строки данных.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Тип</th>
+        <th>Поле</th>
+        <th>Название</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <select>
+            <option>Строка</option>
+            <option>Целое</option>
+            <option>Большое целое</option>
+            <option>Дата</option>
+            <option>UUID</option>
+          </select>
+        </td>
+        <td><input value="parent_code"></td>
+        <td><input value="Родительский код"></td>
+        <td><button>Удалить</button></td>
+      </tr>
+      <tr>
+        <td>
+          <select>
+            <option>Строка</option>
+          </select>
+        </td>
+        <td><input placeholder="код поля"></td>
+        <td><input placeholder="подпись поля"></td>
+        <td><button>Удалить</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <button>Добавить новое поле</button>
+  <div>
+    <button>Создать</button>
+    <button>Отмена</button>
+  </div>
+</div>
 
 ### 2.2.1. Что отображается
 
@@ -77,7 +176,86 @@
 
 ## 2.3. Экран «Версии справочника»
 
-[Пример экрана](ui/versions.html)
+<div class="screen">
+  <h1>Версии справочника</h1>
+  <div class="head">
+    <div>Название: Материал стен</div>
+    <div>Код: WallMaterial</div>
+    <div>Владелец: Имущество</div>
+  </div>
+  <button>Загрузить новую версию справочника</button>
+  <button>Паспорт</button>
+  <button>Отмена</button>
+  <table>
+    <thead>
+      <tr>
+        <th>№ версии</th>
+        <th>Статус</th>
+        <th>Дата С</th>
+        <th>Дата ПО</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>4</td>
+        <td>Черновик</td>
+        <td>23.10.2026</td>
+        <td>—</td>
+        <td>
+          <button>Опубликовать</button>
+          <button>Удалить</button>
+          <button>Найти</button>
+        </td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Действует</td>
+        <td>01.01.2024</td>
+        <td>—</td>
+        <td>
+          <button>Найти</button>
+          <button>Закрыть</button>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Закрыта</td>
+        <td>01.01.2023</td>
+        <td>31.12.2023</td>
+        <td>
+          <button>Найти</button>
+          <button>Архивировать</button>
+        </td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>В архиве</td>
+        <td>01.01.2022</td>
+        <td>31.12.2022</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="dialog">
+    <h2>Закрыть версию 3</h2>
+    <label>Дата конца <input type="date" value="2026-10-25"></label>
+    <div>
+      <button>Закрыть</button>
+      <button>Отмена</button>
+    </div>
+  </div>
+  <div class="dialog">
+    <h2>Удалить черновик 4?</h2>
+    <button>Удалить</button>
+    <button>Отмена</button>
+  </div>
+  <div class="dialog">
+    <h2>Архивировать версию 2?</h2>
+    <button>Архивировать</button>
+    <button>Отмена</button>
+  </div>
+</div>
 
 ### 2.3.1. Что отображается
 
@@ -106,7 +284,16 @@
 
 ## 2.4. Окно «Паспорт»
 
-[Пример экрана](ui/passport.html)
+<div class="screen">
+  <h1>Паспорт</h1>
+  <label>Код <input value="WallMaterial" readonly></label>
+  <label>Название <input value="Материал стен"></label>
+  <label>Владелец <input value="Имущество"></label>
+  <div>
+    <button>Сохранить</button>
+    <button>Отмена</button>
+  </div>
+</div>
 
 Открывается действием «Паспорт» из списка справочников или с экрана версий.
 
@@ -125,7 +312,17 @@
 
 ## 2.5. Диалог «Загрузка новой версии»
 
-[Пример экрана](ui/upload.html)
+<div class="screen">
+  <h1>Загрузка новой версии</h1>
+  <label>Файл * <input type="file" accept=".csv,.json,text/csv,application/json"></label>
+  <p>CSV или JSON, не больше 100 МБ. В файле код значения, подпись и поля справочника.</p>
+  <label>Дата начала действия * <input type="date" value="2026-10-23"></label>
+  <div>
+    <button>Загрузить</button>
+    <button>Отмена</button>
+  </div>
+  <div class="error">Черновик уже есть. Удалите его, затем загрузите файл снова.</div>
+</div>
 
 ### 2.5.1. Что отображается
 
@@ -143,7 +340,33 @@
 
 ## 2.6. Экран «Данные версии»
 
-[Пример экрана](ui/version-data.html)
+<div class="screen">
+  <h1>Данные версии 4 · Черновик</h1>
+  <div>Материал стен, WallMaterial</div>
+  <p>
+    <input placeholder="код или подпись" value="кир">
+    <button>Найти</button>
+    <button>Очистить</button>
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Код значения</th>
+        <th>Подпись</th>
+        <th>Родительский код</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>BRICK</td>
+        <td>Кирпич</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+  <button>Загрузить ещё</button>
+  <button>Назад</button>
+</div>
 
 Открывается действием «Найти» у черновика, действующей или закрытой версии.
 
