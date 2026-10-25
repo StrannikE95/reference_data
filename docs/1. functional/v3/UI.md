@@ -3,7 +3,7 @@
 Экраны администратора справочников.
 
 <style>
-.screen { font: 14px/1.4 sans-serif; color: #222; background: #fff; border: 1px solid #bbb; padding: 16px 18px; margin: 8px 0 20px; }
+.screen { font: 14px/1.4 sans-serif; color: #222; background: #ececec; border: 1px solid #bbb; padding: 16px 18px; margin: 8px 0 20px; }
 .screen h1 { font-size: 18px; margin: 0 0 12px; }
 .screen h2 { font-size: 16px; margin: 16px 0 8px; }
 .screen table { border-collapse: collapse; width: 100%; margin: 12px 0; }
