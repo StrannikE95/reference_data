@@ -1,0 +1,36 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "gar",
+  "sourceFile": "structure-12032021.zip",
+  "tables": [
+    {
+      "name": "object_level",
+      "columns": [
+        { "name": "level_code", "type": "string", "length": 10, "nullable": false },
+        { "name": "name", "type": "string", "length": 250, "nullable": false },
+        { "name": "short_name", "type": "string", "length": 50, "nullable": false }
+      ],
+      "primaryKey": ["level_code"],
+      "foreignKeys": []
+    },
+    {
+      "name": "addr_obj",
+      "columns": [
+        { "name": "object_id", "type": "bigint", "nullable": false },
+        { "name": "object_guid", "type": "uuid", "nullable": false },
+        { "name": "name", "type": "string", "length": 250, "nullable": false },
+        { "name": "type_name", "type": "string", "length": 50, "nullable": false },
+        { "name": "level_code", "type": "string", "length": 10, "nullable": false },
+        { "name": "start_date", "type": "date", "nullable": false },
+        { "name": "end_date", "type": "date", "nullable": false }
+      ],
+      "primaryKey": ["object_id"],
+      "foreignKeys": [
+        {
+          "columns": ["level_code"],
+          "references": { "table": "object_level", "columns": ["level_code"] }
+        }
+      ]
+    }
+  ]
+}

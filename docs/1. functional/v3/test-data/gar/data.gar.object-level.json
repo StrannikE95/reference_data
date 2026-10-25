@@ -1,0 +1,19 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "gar",
+  "sourceFile": "AS_OBJECT_LEVELS_20261016.XML",
+  "part": 1,
+  "last": false,
+  "tables": [
+    {
+      "name": "object_level",
+      "rows": [
+        {
+          "level_code": "8",
+          "name": "Элемент улично-дорожной сети",
+          "short_name": "Улица"
+        }
+      ]
+    }
+  ]
+}

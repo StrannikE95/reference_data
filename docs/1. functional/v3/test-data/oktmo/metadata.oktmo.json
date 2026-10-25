@@ -1,0 +1,25 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "oktmo",
+  "sourceFile": "oktmo.csv",
+  "tables": [
+    {
+      "name": "oktmo",
+      "columns": [
+        { "name": "value_code", "type": "string", "length": 11, "nullable": false },
+        { "name": "section", "type": "string", "length": 1, "nullable": false },
+        { "name": "name", "type": "string", "length": 500, "nullable": false },
+        { "name": "parent_code", "type": "string", "length": 11, "nullable": true },
+        { "name": "change_number", "type": "string", "length": 10, "nullable": false },
+        { "name": "introduced_on", "type": "date", "nullable": false }
+      ],
+      "primaryKey": ["value_code", "section"],
+      "foreignKeys": [
+        {
+          "columns": ["parent_code", "section"],
+          "references": { "table": "oktmo", "columns": ["value_code", "section"] }
+        }
+      ]
+    }
+  ]
+}

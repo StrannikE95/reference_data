@@ -1,0 +1,22 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "wall-material",
+  "sourceFile": "dWall_v02.xsd",
+  "tables": [
+    {
+      "name": "wall_material",
+      "columns": [
+        { "name": "value_code", "type": "string", "length": 12, "nullable": false },
+        { "name": "name", "type": "string", "length": 500, "nullable": false },
+        { "name": "parent_code", "type": "string", "length": 12, "nullable": true }
+      ],
+      "primaryKey": ["value_code"],
+      "foreignKeys": [
+        {
+          "columns": ["parent_code"],
+          "references": { "table": "wall_material", "columns": ["value_code"] }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "gar",
+  "sourceFile": "AS_ADDR_OBJ_20261016_01.XML",
+  "part": 2,
+  "last": true,
+  "skippedLevel": 0,
+  "tables": [
+    {
+      "name": "addr_obj",
+      "rows": [
+        {
+          "object_id": 597041,
+          "object_guid": "00000000-0000-0000-0000-000000000000",
+          "name": "Тверская",
+          "type_name": "ул",
+          "level_code": "8",
+          "start_date": "2014-01-01",
+          "end_date": "2079-06-06"
+        }
+      ]
+    }
+  ]
+}

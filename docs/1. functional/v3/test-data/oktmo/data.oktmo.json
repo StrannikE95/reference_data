@@ -1,0 +1,22 @@
+{
+  "loadId": "6f1c0a2e-7b14-4d2a-9c31-0a6e5d8b41f2",
+  "sourceCode": "oktmo",
+  "sourceFile": "oktmo.csv",
+  "part": 1,
+  "last": true,
+  "tables": [
+    {
+      "name": "oktmo",
+      "rows": [
+        {
+          "value_code": "01512000101",
+          "section": "2",
+          "name": "с Залесово",
+          "parent_code": null,
+          "change_number": "493",
+          "introduced_on": "2022-01-01"
+        }
+      ]
+    }
+  ]
+}
