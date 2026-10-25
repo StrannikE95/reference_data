@@ -50,49 +50,57 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 
 # Алгоритм работы
 
+## Валидация
+
 1. Проверить тело.
-    + `status` не из трёх значений, лишнее поле или нет `valid_to` при `closed`:
+    + `status` не из списка `active`, `closed`, `archived`:
         + Код: `invalid_request`
         + Статус: `400`
-2. Начать транзакцию. Заблокировать строку `dictionary` через `SELECT ... FOR UPDATE`.
-3. Нет паспорта:
-    + Код: `dictionary_not_found`
-    + Статус: `404`
-4. `status` паспорта не `active`:
-    + Код: `dictionary_inactive`
-    + Статус: `409`
-5. Найти `dictionary_version` по `dictionary_id` и `version_id`.
+    + Лишнее поле:
+        + Код: `invalid_request`
+        + Статус: `400`
+    + `status = closed`, а `valid_to` нет или дата не в виде `YYYY-MM-DD`:
+        + Код: `invalid_request`
+        + Статус: `400`
+2. Найти паспорт по переданному коду.
+    + Нет строки:
+        + Код: `dictionary_not_found`
+        + Статус: `404`
+3. Найти `dictionary_version` по `dictionary_id` и переданному `version_id`.
     + Нет строки:
         + Код: `version_not_found`
         + Статус: `404`
-6. `status = active` в теле. Версия не `draft`:
+
+## Бизнес-логика
+
+1. Начать транзакцию. Заблокировать строку `dictionary` через `SELECT ... FOR UPDATE`.
+2. `status` паспорта не `active`:
+    + Код: `dictionary_inactive`
     + Статус: `409`
-7. `status = active` в теле. Есть другая версия со `status = active`:
+3. `status = active` в теле. Версия не `draft`:
+    + Статус: `409`
+4. `status = active` в теле. Есть другая версия со `status = active`:
     + Закрыть её в этой транзакции: `status = closed`, `valid_to = valid_from` публикуемой версии минус 1 день
     + Её номер — `closed_version_id`, дата — `closed_valid_to`
     + Действующей нет — оба поля ответа пустые
-8. `status = active` в теле. Перевести черновик в `active`. `valid_from` не менять. `valid_to` оставить пустым. Секцию и строки не переписывать.
-9. `status = closed` в теле. Версия не `active`:
+5. `status = active` в теле. Перевести черновик в `active`. `valid_from` не менять. `valid_to` оставить пустым. Секцию и строки не переписывать.
+6. `status = closed` в теле. Версия не `active`:
     + Статус: `409`
-10. `status = closed` в теле. Записать `status = closed` и `valid_to` из тела. Секцию не отсоединять. Следующей версии нет: дата конца приходит от клиента.
-11. `status = archived` в теле. Версия не `closed`:
+7. `status = closed` в теле. Записать `status = closed` и `valid_to` из тела. Секцию не отсоединять. Следующей версии нет: дата конца приходит от клиента.
+8. `status = archived` в теле. Версия не `closed`:
     + Код: `version_not_closed`
     + Статус: `409`
-12. `status = archived` в теле. Записать `status = archived` и выполнить `ALTER TABLE "{table_name}" DETACH PARTITION "{table_name}_{version_id}"`.
+9. `status = archived` в теле. Записать `status = archived` и выполнить `ALTER TABLE "{table_name}" DETACH PARTITION "{table_name}_{version_id}"`.
     + Ошибка `DETACH`:
         + Код: `archive_failed`
         + Статус: `500`
         + Транзакция откатывается, статус остаётся `closed`
-13. Зафиксировать транзакцию. Вернуть статус `200`. Свой SQL-файл не создавать.
+10. Зафиксировать транзакцию. Вернуть статус `200`. Свой SQL-файл не создавать.
 
 ```mermaid
 flowchart TD
-  body{"status в теле"} -->|нет| bad["400 invalid_request"]
-  body -->|да| lock["Транзакция и FOR UPDATE"]
-  lock --> pas{"Паспорт и версия"}
-  pas -->|нет паспорта| d404["404 dictionary_not_found"]
-  pas -->|паспорт не active| ina["409 dictionary_inactive"]
-  pas -->|нет версии| v404["404 version_not_found"]
+  lock["Транзакция и FOR UPDATE"] --> pas{"Паспорт active"}
+  pas -->|нет| ina["409 dictionary_inactive"]
   pas -->|да| to{"Целевой status"}
   to -->|active| fromD{"Сейчас draft"}
   fromD -->|нет| d409["409"]

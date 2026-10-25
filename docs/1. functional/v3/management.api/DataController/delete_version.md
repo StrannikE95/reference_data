@@ -22,26 +22,27 @@ DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 
 # Алгоритм работы
 
-1. Найти паспорт.
+## Валидация
+
+1. Найти паспорт по переданному коду.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
-2. Найти версию.
+2. Найти версию по переданному `version_id`.
     + Нет:
         + Код: `version_not_found`
         + Статус: `404`
-3. `status` не `draft`:
+
+## Бизнес-логика
+
+1. `status` не `draft`:
     + Статус: `409`
-4. Удалить секцию `{table_name}_{version_id}` и строку `dictionary_version`.
-5. Вернуть статус `204`. SQL-файлы в `db/sql-data` не удалять.
+2. Удалить секцию `{table_name}_{version_id}` и строку `dictionary_version`.
+3. Вернуть статус `204`. SQL-файлы в `db/sql-data` не удалять.
 
 ```mermaid
 flowchart TD
-  pas{"Паспорт"} -->|нет| d404["404 dictionary_not_found"]
-  pas -->|да| ver{"Версия"}
-  ver -->|нет| v404["404 version_not_found"]
-  ver -->|да| st{"status = draft"}
-  st -->|нет| d409["409"]
+  st{"status = draft"} -->|нет| d409["409"]
   st -->|да| drop["Удалить секцию и строку версии"]
   drop --> ok["204"]
 ```

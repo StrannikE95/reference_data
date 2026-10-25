@@ -29,24 +29,25 @@ PATCH **/admin/passports/{dictionary_code}**
 
 # Алгоритм работы
 
-1. Проверить тело.
-    + Нет `dictionary_name`, длина вне диапазона или неизвестное поле:
+## Валидация
+
+1. Проверить тело: `dictionary_name` передан, длина от 1 до 200, `owner` не длиннее 200, неизвестных полей нет.
+    + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Найти `dictionary` по коду без учёта регистра.
+2. Найти `dictionary` по переданному коду без учёта регистра.
     + Нет строки:
         + Код: `dictionary_not_found`
         + Статус: `404`
-3. Записать `dictionary_name` и `owner`. `dictionary_code`, `status` и `JSON_metadata` не менять.
-4. Вернуть статус `200`.
+
+## Бизнес-логика
+
+1. Записать `dictionary_name` и `owner`. `dictionary_code`, `status` и `JSON_metadata` не менять.
+2. Вернуть статус `200`.
 
 ```mermaid
 flowchart TD
-  body{"Название и владелец"} -->|нет| bad["400 invalid_request"]
-  body -->|да| pas{"Паспорт"}
-  pas -->|нет| d404["404 dictionary_not_found"]
-  pas -->|да| save["UPDATE dictionary_name и owner"]
-  save --> ok["200"]
+  save["UPDATE dictionary_name и owner"] --> ok["200"]
 ```
 
 Код справочника берётся из пути и остаётся прежним. Версии и секции этот вызов не трогает.

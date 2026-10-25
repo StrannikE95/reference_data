@@ -55,20 +55,25 @@ POST **/admin/passports**
 
 # Алгоритм работы
 
-1. Проверить тело: шаблон кода, длины, типы, уникальность `code` внутри `fields`, запрет имён `version_id`, `value_code`, `name`, не больше 50 полей, неизвестные поля.
+## Валидация
+
+1. Проверить тело: шаблон `dictionary_code`, длины `dictionary_name` и `owner`, типы и длины элементов `fields`, шаблон `fields[].code`, уникальность `code` внутри переданного списка, запрет имён `version_id`, `value_code`, `name`, не больше 50 полей, неизвестных полей нет.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Проверить уникальность `dictionary_code` без учёта регистра.
+
+## Бизнес-логика
+
+1. Проверить уникальность `dictionary_code` без учёта регистра.
     + Код занят:
         + Код: `dictionary_already_exists`
         + Статус: `409`
-3. Построить `table_name` из `dictionary_code`: разделитель `_`, буквы строчные. Длина не больше 63.
+2. Построить `table_name` из `dictionary_code`: разделитель `_`, буквы строчные. Длина не больше 63.
     + `WallMaterial` → `wall_material`
-4. Собрать `JSON_metadata`: `dictionary_code`, `table_name`, длина `value_code` 64, длина `name` 500, массив `fields` как в запросе.
-5. Начать транзакцию.
-6. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`, `JSON_metadata`. Отдельный JSON-файл не пишется.
-7. Записать SQL в `db/sql-schema/{локальное время до секунды} - {table_name}.sql`.
+3. Собрать `JSON_metadata`: `dictionary_code`, `table_name`, длина `value_code` 64, длина `name` 500, массив `fields` как в запросе.
+4. Начать транзакцию.
+5. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`, `JSON_metadata`. Отдельный JSON-файл не пишется.
+6. Записать SQL в `db/sql-schema/{локальное время до секунды} - {table_name}.sql`.
     + Пример: `db/sql-schema/2026.10.23 16.00.00 - wall_material.sql`
     + UTF-8 без BOM
     + Если имя занято, добавить `-2`, `-3` и далее
@@ -78,18 +83,16 @@ POST **/admin/passports**
     + Первичный ключ `(version_id, value_code)`
     + `PARTITION BY LIST (version_id)`, без `DEFAULT`-секции
     + Имена таблиц и колонок в двойных кавычках
-8. Выполнить файл в той же транзакции.
+7. Выполнить файл в той же транзакции.
     + Ошибка выполнения:
         + Код: `script_failed`
         + Статус: `500`
         + Транзакция откатывается, уже записанный SQL-файл остаётся
-9. Зафиксировать транзакцию. Вернуть статус `201` и `metadata_sql_path`.
+8. Зафиксировать транзакцию. Вернуть статус `201` и `metadata_sql_path`.
 
 ```mermaid
 flowchart TD
-  body{"Тело"} -->|нет| bad["400 invalid_request"]
-  body -->|да| uniq{"Код свободен"}
-  uniq -->|нет| exists["409 dictionary_already_exists"]
+  uniq{"Код свободен"} -->|нет| exists["409 dictionary_already_exists"]
   uniq -->|да| meta["table_name и JSON_metadata"]
   meta --> row["INSERT dictionary"]
   row --> file["SQL в db/sql-schema"]

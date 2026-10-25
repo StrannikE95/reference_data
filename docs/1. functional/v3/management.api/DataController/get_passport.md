@@ -38,20 +38,23 @@ GET **/admin/passports/{dictionary_code}**
 
 # Алгоритм работы
 
-1. Найти `dictionary` по коду без учёта регистра.
+## Валидация
+
+1. Найти `dictionary` по переданному коду без учёта регистра.
     + Нет строки:
         + Код: `dictionary_not_found`
         + Статус: `404`
-2. Собрать `fields`, `table_name` и `schema_name` из `dictionary.JSON_metadata`.
-3. Прочитать `dictionary_version` этого `dictionary_id`, сортировка `version_id` по убыванию.
-4. Для каждой версии `archived = (status = archived)`.
-5. Вернуть статус `200`. Секцию не читать.
+
+## Бизнес-логика
+
+1. Собрать `fields`, `table_name` и `schema_name` из `dictionary.JSON_metadata`.
+2. Прочитать `dictionary_version` этого `dictionary_id`, сортировка `version_id` по убыванию.
+3. Для каждой версии `archived = (status = archived)`.
+4. Вернуть статус `200`. Секцию не читать.
 
 ```mermaid
 flowchart TD
-  find{"Паспорт по коду"} -->|нет| nf["404 dictionary_not_found"]
-  find -->|да| meta["fields из JSON_metadata"]
-  meta --> vers["Версии по version_id"]
+  meta["fields из JSON_metadata"] --> vers["Версии по version_id"]
   vers --> arch["archived из status"]
   arch --> ok["200"]
 ```
