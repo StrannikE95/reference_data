@@ -11,7 +11,7 @@ GET **/admin/passports/{dictionary_code}**
     + path
     + Обязательно
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_id`
 + `dictionary_code`

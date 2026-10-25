@@ -24,7 +24,7 @@ POST **/admin/dictionaries/{dictionary_code}**
     + Обязательно
     + Дата `YYYY-MM-DD`
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_version_id`
 + `version_id` — номер новой версии

@@ -16,7 +16,7 @@ GET **/admin/dictionaries/{dictionary_code}/versions**
     + `draft`, `active`, `closed` или `archived`
     + Без параметра возвращаются все версии
 
-# Параметры ответа
+# Поля ответа
 
 + `items`:
     + Массив, по `version_id` по убыванию

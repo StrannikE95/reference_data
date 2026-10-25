@@ -27,7 +27,7 @@ GET **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + Не обязательно
     + Последний `value_code` предыдущей страницы
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_code`
 + `version_id`

@@ -19,7 +19,7 @@ POST **/dictionaries/{dictionary_code}/values/check**
     + От 1 до 1000 кодов
     + Повтор в запросе в ответе один раз
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_code`
 + `version_id`

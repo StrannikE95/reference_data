@@ -23,7 +23,7 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
     + Не обязательно
     + Вместе с `on_date` нельзя
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_code`
 + `version_id`

@@ -29,7 +29,7 @@ GET **/dictionaries/{dictionary_code}/values**
     + Последний `value_code` предыдущей страницы
     + С курсором передаётся тот же выбор редакции, что у первой страницы
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_code`
 + `version_id`

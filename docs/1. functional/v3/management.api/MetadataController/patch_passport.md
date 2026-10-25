@@ -19,7 +19,7 @@ PATCH **/admin/passports/{dictionary_code}**
     + Не обязательно
     + До 200 символов. Пустое значение очищает владельца
 
-# Параметры ответа
+# Поля ответа
 
 + `dictionary_id`
 + `dictionary_code`

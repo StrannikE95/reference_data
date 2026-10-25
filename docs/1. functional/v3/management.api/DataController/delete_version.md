@@ -16,7 +16,7 @@ DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 
 Тела нет.
 
-# Параметры ответа
+# Поля ответа
 
 Тела нет.
 

@@ -23,7 +23,7 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + Дата `YYYY-MM-DD`
     + При `active` и `archived` не передаётся
 
-# Параметры ответа
+# Поля ответа
 
 Переход в `active`:
 

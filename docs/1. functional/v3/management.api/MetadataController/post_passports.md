@@ -44,7 +44,7 @@ POST **/admin/passports**
     + Не обязательно
     + По умолчанию `true`
 
-# Параметры ответа
+# Поля ответа
 
 + Паспорт со `status = active`
 + `table_name`
