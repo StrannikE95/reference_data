@@ -2,18 +2,18 @@
 
 | Проект | Контроллер | Метод | Описание |
 | --- | --- | --- | --- |
-| admin | MetadataController | `POST /admin/passports` | [Создать справочник и пустую таблицу](management.api/MetadataController/post_passports.md) |
-| admin | MetadataController | `PATCH /admin/passports/{dictionary_code}` | [Изменить паспорт](management.api/MetadataController/patch_passport.md) |
-| admin | DataController | `GET /admin/passports` | [Получить список паспортов](management.api/DataController/get_passports.md) |
-| admin | DataController | `GET /admin/passports/{dictionary_code}` | [Получить паспорт, поля и версии](management.api/DataController/get_passport.md) |
-| admin | DataController | `POST /admin/dictionaries/{dictionary_code}` | [Создать черновик](management.api/DataController/post_versions.md) |
-| admin | DataController | `GET /admin/dictionaries/{dictionary_code}/versions` | [Поиск версий по условию](management.api/DataController/get_versions.md) |
-| admin | DataController | `GET /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Поиск данных версии](management.api/DataController/get_version.md) |
-| admin | DataController | `PATCH /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Сменить статус версии](management.api/DataController/patch_version.md) |
-| admin | DataController | `DELETE /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Удалить черновик](management.api/DataController/delete_version.md) |
-| service | DataController | `GET /dictionaries/{dictionary_code}/values/{value_code}` | [Одно значение выбранной редакции](service.api/DataController/get_value.md) |
-| service | DataController | `GET /dictionaries/{dictionary_code}/values` | [Страница значений той же редакции](service.api/DataController/get_values.md) |
-| service | DataController | `POST /dictionaries/{dictionary_code}/values/check` | [Проверить коды в указанной версии](service.api/DataController/post_check.md) |
+| admin | MetadataController | `POST /admin/passports` | [Создать справочник и пустую таблицу](api/management.api/MetadataController/post_passports.md) |
+| admin | MetadataController | `PATCH /admin/passports/{dictionary_code}` | [Изменить паспорт](api/management.api/MetadataController/patch_passport.md) |
+| admin | DataController | `GET /admin/passports` | [Получить список паспортов](api/management.api/DataController/get_passports.md) |
+| admin | DataController | `GET /admin/passports/{dictionary_code}` | [Получить паспорт, поля и версии](api/management.api/DataController/get_passport.md) |
+| admin | DataController | `POST /admin/dictionaries/{dictionary_code}` | [Создать черновик](api/management.api/DataController/post_versions.md) |
+| admin | DataController | `GET /admin/dictionaries/{dictionary_code}/versions` | [Поиск версий по условию](api/management.api/DataController/get_versions.md) |
+| admin | DataController | `GET /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Поиск данных версии](api/management.api/DataController/get_version.md) |
+| admin | DataController | `PATCH /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Сменить статус версии](api/management.api/DataController/patch_version.md) |
+| admin | DataController | `DELETE /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Удалить черновик](api/management.api/DataController/delete_version.md) |
+| service | DataController | `GET /dictionaries/{dictionary_code}/values/{value_code}` | [Одно значение выбранной редакции](api/service.api/DataController/get_value.md) |
+| service | DataController | `GET /dictionaries/{dictionary_code}/values` | [Страница значений той же редакции](api/service.api/DataController/get_values.md) |
+| service | DataController | `POST /dictionaries/{dictionary_code}/values/check` | [Проверить коды в указанной версии](api/service.api/DataController/post_check.md) |
 
 # Коды ответов
 
