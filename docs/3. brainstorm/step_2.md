@@ -22,7 +22,7 @@
 - Размер таблицы - большой (много избыточного дублирования)
 - Создание / изменение метаданных = SQL
 
-Пример. 20.10.2026 у кирпича сменилось имя и добавился металл. Редакция 2 хранит полный список, в том числе камень, дерево и брус, которые не менялись. Связь `wall_material (version_id, kind_code) → wall_kind (version_id, kind_code)`.
+Пример. У материала две своих колонки: `is_bearing` (несущая) и `density` (кг/м³). 20.10.2026 у кирпича сменилось имя и добавился металл. Редакция 2 хранит полный список, в том числе камень, дерево и брус, которые не менялись. Связь `wall_material (version_id, kind_code) → wall_kind (version_id, kind_code)`.
 
 `dictionary_version`
 
@@ -43,13 +43,13 @@
 
 `wall_material`
 
-| version_id | value_code | name | kind_code |
-| --- | --- | --- | --- |
-| 1 | BRICK | Кирпич | STONE |
-| 1 | TIMBER | Брус | WOOD |
-| 2 | BRICK | Кирпич керамический | STONE |
-| 2 | TIMBER | Брус | WOOD |
-| 2 | STEEL | Сталь | METAL |
+| version_id | value_code | name | kind_code | is_bearing | density |
+| --- | --- | --- | --- | --- | --- |
+| 1 | BRICK | Кирпич | STONE | да | 1800 |
+| 1 | TIMBER | Брус | WOOD | нет | 500 |
+| 2 | BRICK | Кирпич керамический | STONE | да | 1800 |
+| 2 | TIMBER | Брус | WOOD | нет | 500 |
+| 2 | STEEL | Сталь | METAL | да | 7850 |
 
 # 2 (Несколько	Подзарпос: Код + Дата	Типизированные	Интервал)
 Особенности:
@@ -77,12 +77,12 @@
 
 `wall_material`
 
-| value_code | name | kind_code | valid_from | valid_to |
-| --- | --- | --- | --- | --- |
-| BRICK | Кирпич | STONE | 2024-01-01 | 2026-10-19 |
-| BRICK | Кирпич керамический | STONE | 2026-10-20 | |
-| TIMBER | Брус | WOOD | 2024-01-01 | |
-| STEEL | Сталь | METAL | 2026-10-20 | |
+| value_code | name | kind_code | is_bearing | density | valid_from | valid_to |
+| --- | --- | --- | --- | --- | --- | --- |
+| BRICK | Кирпич | STONE | да | 1800 | 2024-01-01 | 2026-10-19 |
+| BRICK | Кирпич керамический | STONE | да | 1800 | 2026-10-20 | |
+| TIMBER | Брус | WOOD | нет | 500 | 2024-01-01 | |
+| STEEL | Сталь | METAL | да | 7850 | 2026-10-20 | |
 
 Срез на 2024-06-01: кирпич «Кирпич», брус, камень, дерево. Срез на 2026-10-20: кирпич «Кирпич керамический», брус, сталь, камень, дерево, металл.
 
@@ -116,11 +116,11 @@
 
 `wall_material`, актуальное
 
-| value_code | name | kind_code |
-| --- | --- | --- |
-| BRICK | Кирпич керамический | STONE |
-| TIMBER | Брус | WOOD |
-| STEEL | Сталь | METAL |
+| value_code | name | kind_code | is_bearing | density |
+| --- | --- | --- | --- | --- |
+| BRICK | Кирпич керамический | STONE | да | 1800 |
+| TIMBER | Брус | WOOD | нет | 500 |
+| STEEL | Сталь | METAL | да | 7850 |
 
 `dictionary_history`
 
@@ -128,8 +128,8 @@
 | --- | --- | --- | --- | --- |
 | 1 | 2024-01-01 | 2026-10-19 | wall_kind | `{"kind_code":"STONE","name":"Камень"}` |
 | 1 | 2024-01-01 | 2026-10-19 | wall_kind | `{"kind_code":"WOOD","name":"Дерево"}` |
-| 1 | 2024-01-01 | 2026-10-19 | wall_material | `{"value_code":"BRICK","name":"Кирпич"}` |
-| 1 | 2024-01-01 | 2026-10-19 | wall_material | `{"value_code":"TIMBER","name":"Брус"}` |
+| 1 | 2024-01-01 | 2026-10-19 | wall_material | `{"value_code":"BRICK","name":"Кирпич","is_bearing":true,"density":1800}` |
+| 1 | 2024-01-01 | 2026-10-19 | wall_material | `{"value_code":"TIMBER","name":"Брус","is_bearing":false,"density":500}` |
 
 # 4 (Одна	Подзарпос: Код + Дата	Jsonb	Интервал)
 Особенности:
@@ -155,8 +155,8 @@
 | WallKind | STONE | | 2024-01-01 | | `{"name":"Камень"}` |
 | WallKind | WOOD | | 2024-01-01 | | `{"name":"Дерево"}` |
 | WallKind | METAL | | 2026-10-20 | | `{"name":"Металл"}` |
-| WallMaterial | BRICK | STONE | 2024-01-01 | 2026-10-19 | `{"name":"Кирпич"}` |
-| WallMaterial | BRICK | STONE | 2026-10-20 | | `{"name":"Кирпич керамический"}` |
-| WallMaterial | TIMBER | WOOD | 2024-01-01 | | `{"name":"Брус"}` |
-| WallMaterial | STEEL | METAL | 2026-10-20 | | `{"name":"Сталь"}` |
+| WallMaterial | BRICK | STONE | 2024-01-01 | 2026-10-19 | `{"name":"Кирпич","is_bearing":true,"density":1800}` |
+| WallMaterial | BRICK | STONE | 2026-10-20 | | `{"name":"Кирпич керамический","is_bearing":true,"density":1800}` |
+| WallMaterial | TIMBER | WOOD | 2024-01-01 | | `{"name":"Брус","is_bearing":false,"density":500}` |
+| WallMaterial | STEEL | METAL | 2026-10-20 | | `{"name":"Сталь","is_bearing":true,"density":7850}` |
 
