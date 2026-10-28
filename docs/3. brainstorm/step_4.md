@@ -1,6 +1,6 @@
 # История без копии всего справочника
 
-Живые таблицы держат только текущее состояние: типизированные колонки и обычный внешний ключ. У строки есть `valid_from` — день, с которого действует это состояние. Каталог редакций хранит номер и период. Форма каждой таблицы редакции лежит одной строкой в `dictionary_schema`. В `dictionary_history` попадает строка, которую заменили или удалили. Строка, которая не менялась, лежит один раз в живой таблице.
+Живые таблицы держат только текущее состояние: типизированные колонки и обычный внешний ключ. У строки есть `valid_from` — день, с которого действует это состояние. Каталог редакций хранит номер и период. Модель всей редакции — все таблицы, колонки и связи — лежит одной строкой в `dictionary_schema`. В `dictionary_history` попадает строка, которую заменили или удалили. Строка, которая не менялась, лежит один раз в живой таблице.
 
 Черновик в эти таблицы не пишется. При публикации в живые таблицы попадает только отличие от текущего состояния, а вытесненное состояние дописывается в историю.
 
@@ -14,11 +14,11 @@
 - новый внешний ключ, удаление внешнего ключа
 - новая колонка, удаление, переименование, смена типа и обязательности
 
-Живые таблицы всегда в форме последней опубликованной редакции. Прошлая форма таблицы записана документом в `dictionary_schema`: колонки, первичный ключ и внешние ключи, в том числе составные.
+Живые таблицы всегда в форме последней опубликованной редакции. Прошлая модель справочника записана одним документом в `dictionary_schema`: все таблицы редакции, их колонки и первичные ключи, и внешние ключи между ними, в том числе составные.
 
 Малая публикация — новая редакция того же справочника. Так одни и те же перестройки накапливаются за годы: за один выпуск меняется немного, через пять лет справочник может прийти к другому набору таблиц. Выпуск, в котором справочник заменяется целиком — за один раз удаляется большая часть таблиц и заново собираются оставшиеся, — идёт как новый справочник.
 
-Объём истории ограничивается удалением ранних редакций. Вместе с редакцией уходят её схема и документы истории, чей период закончился раньше первой оставшейся редакции. Даты удалённых редакций больше не читаются. Живые таблицы остаются как есть.
+Объём истории ограничивается удалением ранних редакций. Вместе с редакцией уходят её документ схемы и документы истории, чей период закончился раньше первой оставшейся редакции. Даты удалённых редакций больше не читаются. Живые таблицы остаются как есть.
 
 Публикация применяет отличие к живым таблицам:
 
@@ -33,7 +33,7 @@
 
 ```mermaid
 erDiagram
-    dictionary_version ||--o{ dictionary_schema : "version_id"
+    dictionary_version ||--|| dictionary_schema : "version_id"
     dictionary_version ||--o{ dictionary_history : "version_id"
     wall_kind ||--o{ wall_material : "kind_code"
 
@@ -46,7 +46,6 @@ erDiagram
 
     dictionary_schema {
         int version_id PK
-        varchar table_name PK
         jsonb definition
     }
 
@@ -75,9 +74,9 @@ erDiagram
     }
 ```
 
-Строка `dictionary_schema` есть у каждой таблицы, которая входила в редакцию. `definition.columns[].column` — физическая колонка живой таблицы. Пока имя не менялось, оно совпадает с `name`. Составной внешний ключ — один элемент `foreign_keys` со списками колонок.
+Строка `dictionary_schema` одна на редакцию. `definition.tables` — таблицы этой редакции. `definition.tables[имя].columns[].column` — физическая колонка живой таблицы. Пока имя не менялось, оно совпадает с `name`. `definition.foreign_keys` — связи этой редакции. Составной внешний ключ — один элемент со списками колонок.
 
-Связь `kind_code` в живых таблицах есть с редакции 2. У документа в истории внешнего ключа нет: сосед ищется по коду и дате, и только если эта связь записана в `definition` запрошенной редакции.
+Связь `kind_code` в живых таблицах есть с редакции 2. У документа в истории внешнего ключа нет: сосед ищется по коду и дате, и только если эта связь есть в `foreign_keys` модели запрошенной редакции.
 
 # Содержимое
 
@@ -90,14 +89,65 @@ erDiagram
 
 `dictionary_schema`
 
-| version_id | table_name | definition |
-| --- | --- | --- |
-| 1 | wall_kind | `{"columns":[{"name":"kind_code","column":"kind_code","type":"string","nullable":false},{"name":"name","column":"name","type":"string","nullable":false}],"primary_key":["kind_code"],"foreign_keys":[]}` |
-| 1 | wall_material | `{"columns":[{"name":"value_code","column":"value_code","type":"string","nullable":false},{"name":"name","column":"name","type":"string","nullable":false},{"name":"is_bearing","column":"is_bearing","type":"boolean","nullable":false},{"name":"density","column":"density","type":"int","nullable":false}],"primary_key":["value_code"],"foreign_keys":[]}` |
-| 2 | wall_kind | `{"columns":[{"name":"kind_code","column":"kind_code","type":"string","nullable":false},{"name":"name","column":"name","type":"string","nullable":false}],"primary_key":["kind_code"],"foreign_keys":[]}` |
-| 2 | wall_material | `{"columns":[{"name":"value_code","column":"value_code","type":"string","nullable":false},{"name":"name","column":"name","type":"string","nullable":false},{"name":"kind_code","column":"kind_code","type":"string","nullable":false},{"name":"is_bearing","column":"is_bearing","type":"boolean","nullable":false},{"name":"density","column":"density","type":"int","nullable":false}],"primary_key":["value_code"],"foreign_keys":[{"columns":["kind_code"],"ref_table":"wall_kind","ref_columns":["kind_code"]}]}` |
+| version_id | definition |
+| --- | --- |
+| 1 | модель редакции 1 |
+| 2 | модель редакции 2 |
 
-У редакции 1 в документе материала нет ни колонки `kind_code`, ни внешнего ключа. У редакции 2 ключ — один элемент `foreign_keys`, даже когда колонок в нём несколько.
+Редакция 1. У материала нет `kind_code`, связей нет. Описание `wall_kind` повторится и в редакции 2: документ каждой редакции полный.
+
+```json
+{
+  "tables": {
+    "wall_kind": {
+      "columns": [
+        {"name": "kind_code", "column": "kind_code", "type": "string", "nullable": false},
+        {"name": "name", "column": "name", "type": "string", "nullable": false}
+      ],
+      "primary_key": ["kind_code"]
+    },
+    "wall_material": {
+      "columns": [
+        {"name": "value_code", "column": "value_code", "type": "string", "nullable": false},
+        {"name": "name", "column": "name", "type": "string", "nullable": false},
+        {"name": "is_bearing", "column": "is_bearing", "type": "boolean", "nullable": false},
+        {"name": "density", "column": "density", "type": "int", "nullable": false}
+      ],
+      "primary_key": ["value_code"]
+    }
+  },
+  "foreign_keys": []
+}
+```
+
+Редакция 2. Добавлены колонка и связь. Ключ — один элемент `foreign_keys`, даже когда колонок в нём несколько.
+
+```json
+{
+  "tables": {
+    "wall_kind": {
+      "columns": [
+        {"name": "kind_code", "column": "kind_code", "type": "string", "nullable": false},
+        {"name": "name", "column": "name", "type": "string", "nullable": false}
+      ],
+      "primary_key": ["kind_code"]
+    },
+    "wall_material": {
+      "columns": [
+        {"name": "value_code", "column": "value_code", "type": "string", "nullable": false},
+        {"name": "name", "column": "name", "type": "string", "nullable": false},
+        {"name": "kind_code", "column": "kind_code", "type": "string", "nullable": false},
+        {"name": "is_bearing", "column": "is_bearing", "type": "boolean", "nullable": false},
+        {"name": "density", "column": "density", "type": "int", "nullable": false}
+      ],
+      "primary_key": ["value_code"]
+    }
+  },
+  "foreign_keys": [
+    {"from_table": "wall_material", "columns": ["kind_code"], "ref_table": "wall_kind", "ref_columns": ["kind_code"]}
+  ]
+}
+```
 
 `wall_kind`
 
@@ -125,15 +175,15 @@ erDiagram
 
 Вход: имя таблицы и дата.
 
-1. Найти редакцию в `dictionary_version`: `valid_from` не позже даты, `valid_to` пустой или не раньше даты. Нет такой редакции — на эту дату справочника нет. Ранняя редакция, удалённая вместе со своими документами схемы, сюда тоже не попадает.
-2. Взять строку `dictionary_schema` этой редакции и запрошенной таблицы. Строки нет — на эту дату таблицы не было, ответ пустой. Список полей ответа — `definition.columns`.
+1. Найти редакцию в `dictionary_version`: `valid_from` не позже даты, `valid_to` пустой или не раньше даты. Нет такой редакции — на эту дату справочника нет. Ранняя редакция, удалённая вместе со своим документом схемы, сюда тоже не попадает.
+2. Взять строку `dictionary_schema` этой редакции. Если запрошенной таблицы нет в `definition.tables` — на эту дату таблицы не было, ответ пустой. Список полей ответа — `definition.tables[имя].columns`.
 3. Из `dictionary_history` взять строки этой таблицы, у которых `valid_from` не позже даты и `valid_to` не раньше даты. Значение поля берётся из `data` по `name`.
-4. Если живая таблица ещё есть, взять из неё строки, у которых `valid_from` не позже даты и код не попал в шаг 3. Значение поля берётся из колонки `column`. Колонки, которой нет в `definition.columns`, в ответ не входят. Живой таблицы уже нет — в ответе только шаг 3.
-5. Ответ — строки шагов 3 и 4. Сосед по внешнему ключу ищется этим же алгоритмом на ту же дату, и только когда связь есть в `definition.foreign_keys` этой строки.
+4. Если живая таблица ещё есть, взять из неё строки, у которых `valid_from` не позже даты и код не попал в шаг 3. Значение поля берётся из колонки `column`. Колонки, которой нет в `definition.tables[имя].columns`, в ответ не входят. Живой таблицы уже нет — в ответе только шаг 3.
+5. Ответ — строки шагов 3 и 4. Сосед по внешнему ключу ищется этим же алгоритмом на ту же дату, и только когда в `definition.foreign_keys` этой модели есть связь с `from_table`, равным запрошенной таблице.
 
 Удалённый код остаётся только в истории и попадает в ответ, пока дата внутри его интервала. Код, появившийся позже даты, в живой таблице имеет более поздний `valid_from` и в ответ не входит.
 
-На 2024-06-01 редакция 1. Кирпич закрыт в истории. Брус берётся из живой строки, `kind_code` в документе этой редакции нет и в ответ не входит. Сталь и металл начинаются 2026-10-20.
+На 2024-06-01 редакция 1. Кирпич закрыт в истории. Брус берётся из живой строки, `kind_code` в модели этой редакции нет и в ответ не входит. Сталь и металл начинаются 2026-10-20.
 
 `wall_kind` на 2024-06-01
 
