@@ -3,7 +3,7 @@
 | Проект | Контроллер | Метод | Описание |
 | --- | --- | --- | --- |
 | admin | MetadataController | `POST /admin/dictionaries` | [Создать справочник](api/management.api/MetadataController/post_dictionaries.md) |
-| admin | MetadataController | `PATCH /admin/dictionaries/{dictionary_code}` | [Изменить паспорт и черновик колонок](api/management.api/MetadataController/patch_dictionary.md) |
+| admin | MetadataController | `PATCH /admin/dictionaries/{dictionary_code}` | [Создать или изменить черновик колонок](api/management.api/MetadataController/patch_dictionary.md) |
 | admin | MetadataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/publish` | [Сделать черновик активным](api/management.api/MetadataController/post_publish.md) |
 | admin | MetadataController | `POST /admin/dictionaries/{dictionary_code}/deactivate` | [Деактивировать справочник](api/management.api/MetadataController/post_deactivate.md) |
 | admin | DataController | `GET /admin/dictionaries` | [Список справочников](api/management.api/DataController/get_dictionaries.md) |
