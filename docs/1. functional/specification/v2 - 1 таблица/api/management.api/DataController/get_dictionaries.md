@@ -22,7 +22,7 @@ GET **/admin/dictionaries**
     + Массив
     + `dictionary_code`
     + `dictionary_name`
-    + `owner` — может быть пустым
+    + `owner` — `null`, если не задан
     + `status`
 + `next_cursor` — пусто, если страниц больше нет
 

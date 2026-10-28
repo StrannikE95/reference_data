@@ -19,7 +19,7 @@ GET **/admin/dictionaries/{dictionary_code}**
 + `dictionary_id`
 + `dictionary_code`
 + `dictionary_name`
-+ `owner`
++ `owner` — `null`, если не задан
 + `status`
 + `versions`:
     + `version_id`
