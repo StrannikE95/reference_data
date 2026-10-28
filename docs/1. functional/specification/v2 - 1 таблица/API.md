@@ -3,8 +3,11 @@
 | Проект | Контроллер | Метод | Описание |
 | --- | --- | --- | --- |
 | admin | MetadataController | `POST /admin/dictionaries` | [Создать справочник](api/management.api/MetadataController/post_dictionaries.md) |
-| admin | MetadataController | `PATCH /admin/dictionaries/{dictionary_code}` | [Создать или изменить черновик колонок](api/management.api/MetadataController/patch_dictionary.md) |
-| admin | MetadataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/publish` | [Сделать черновик активным](api/management.api/MetadataController/post_publish.md) |
+| admin | MetadataController | `PATCH /admin/dictionaries/{dictionary_code}` | [Изменить название и владельца](api/management.api/MetadataController/patch_dictionary.md) |
+| admin | MetadataController | `POST /admin/dictionaries/{dictionary_code}/versions` | [Создать черновик](api/management.api/MetadataController/post_version.md) |
+| admin | MetadataController | `PATCH /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Изменить колонки черновика](api/management.api/MetadataController/patch_version.md) |
+| admin | MetadataController | `POST /admin/dictionaries/{dictionary_code}/versions/{version_id}/publish` | [Опубликовать черновик](api/management.api/MetadataController/post_publish.md) |
+| admin | MetadataController | `DELETE /admin/dictionaries/{dictionary_code}/versions/{version_id}` | [Удалить черновик](api/management.api/MetadataController/delete_version.md) |
 | admin | MetadataController | `POST /admin/dictionaries/{dictionary_code}/deactivate` | [Деактивировать справочник](api/management.api/MetadataController/post_deactivate.md) |
 | admin | DataController | `GET /admin/dictionaries` | [Список справочников](api/management.api/DataController/get_dictionaries.md) |
 | admin | DataController | `GET /admin/dictionaries/{dictionary_code}` | [Паспорт и поля](api/management.api/DataController/get_dictionary.md) |
@@ -25,7 +28,10 @@
 |404|`draft_not_found`|Черновика нет|-|
 |404|`version_not_found`|Версия не найдена|-|
 |409|`dictionary_already_exists`|Код справочника уже занят|-|
-|409|`version_not_draft`|В активную переводится только черновик|-|
+|409|`draft_already_exists`|Черновик у справочника уже есть|-|
+|409|`version_not_draft`|Действие доступно только для черновика|-|
+|409|`only_draft`|Нельзя удалить черновик, пока нет активной версии|-|
+|409|`reload_required`|После смены колонок не у каждого открытого кода есть полная черновая строка|-|
 |409|`dictionary_inactive`|Справочник деактивирован|-|
 |409|`invalid_valid_from`|Дата начала не позже открытого состояния|-|
 |422|`unknown_field`|Код колонки не подходит к запрошенному режиму|Актуальное чтение принимает только открытое имя. Историческое чтение принимает имя, под которым значение лежит в найденной строке|
