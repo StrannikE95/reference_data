@@ -45,11 +45,11 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| `dictionary_id` | `uuid` | `PK` | Внутренний идентификатор |
-| `dictionary_code` | `varchar(63)` | `NOT NULL` | Код справочника, его передаёт клиент |
-| `dictionary_name` | `varchar(200)` | `NOT NULL` | Название для человека |
-| `owner` | `varchar(200)` | `NULL` | Предметный владелец |
-| `status` | `varchar(16)` | `NOT NULL`, по умолчанию `active` | `active` — паспорт не выключен, `inactive` — деактивирован |
+| dictionary_id | uuid | PK | Внутренний идентификатор |
+| dictionary_code | varchar(63) | NOT NULL | Код справочника, его передаёт клиент |
+| dictionary_name | varchar(200) | NOT NULL | Название для человека |
+| owner | varchar(200) | NULL | Предметный владелец |
+| status | varchar(16) | NOT NULL, по умолчанию active | `active` — паспорт не выключен, `inactive` — деактивирован |
 
 Индексы и ограничения:
 
@@ -62,12 +62,12 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| `dictionary_id` | `uuid` | `PK`, `FK -> dictionary.dictionary_id` | Паспорт |
-| `version_id` | `integer` | `PK` | Номер версии справочника, с 1 |
-| `status` | `varchar(16)` | `NOT NULL` | `draft`, `active` или `closed` |
-| `valid_from` | `timestamptz` | `NULL` | Начало действия схемы. Пусто у черновика |
-| `valid_to` | `timestamptz` | `NULL` | Конец схемы, исключительно. Пусто у `draft` и `active` |
-| `fields` | `jsonb` | `NOT NULL` | Колонки этой версии: `field_id`, `code`, `name`, `type`, `default`, `required` |
+| dictionary_id | uuid | PK, FK -> dictionary.dictionary_id | Паспорт |
+| version_id | integer | PK | Номер версии справочника, с 1 |
+| status | varchar(16) | NOT NULL | `draft`, `active` или `closed` |
+| valid_from | timestamptz | NULL | Начало действия схемы. Пусто у черновика |
+| valid_to | timestamptz | NULL | Конец схемы, исключительно. Пусто у `draft` и `active` |
+| fields | jsonb | NOT NULL | Колонки этой версии: `field_id`, `code`, `name`, `type`, `default`, `required` |
 
 Индексы и ограничения:
 
@@ -87,13 +87,13 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| `dictionary_code` | `varchar(63)` | `NOT NULL`, входит в `PK` | Код справочника и ключ секции |
-| `value_code` | `varchar(64)` | `NOT NULL`, входит в `PK` | Код значения |
-| `version_id` | `integer` | `NOT NULL`, входит в `PK` | Версия, в которой строку записали |
-| `row_status` | `varchar(16)` | `NOT NULL` | `draft` — ещё не опубликована, `published` — входит в периоды |
-| `valid_from` | `timestamptz` | `NOT NULL`, входит в `PK` | Начало состояния, включительно |
-| `valid_to` | `timestamptz` | `NULL` | Конец состояния, исключительно. Пусто у открытого опубликованного состояния |
-| `data` | `jsonb` | `NOT NULL` | Поля значения. Ключ — `code` колонки в версии `version_id` |
+| dictionary_code | varchar(63) | NOT NULL, входит в PK | Код справочника и ключ секции |
+| value_code | varchar(64) | NOT NULL, входит в PK | Код значения |
+| version_id | integer | NOT NULL, входит в PK | Версия, в которой строку записали |
+| row_status | varchar(16) | NOT NULL | `draft` — ещё не опубликована, `published` — входит в периоды |
+| valid_from | timestamptz | NOT NULL, входит в PK | Начало состояния, включительно |
+| valid_to | timestamptz | NULL | Конец состояния, исключительно. Пусто у открытого опубликованного состояния |
+| data | jsonb | NOT NULL | Поля значения. Ключ — `code` колонки в версии `version_id` |
 
 Индексы и ограничения:
 
