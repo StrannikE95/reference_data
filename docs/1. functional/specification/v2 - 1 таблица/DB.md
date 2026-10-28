@@ -39,7 +39,7 @@ erDiagram
 | `dictionary_name` | `varchar(200)` | `NOT NULL` | Название для человека |
 | `owner` | `varchar(200)` | `NULL` | Предметный владелец |
 | `status` | `varchar(16)` | `NOT NULL`, по умолчанию `active` | `active` или `inactive` |
-| `fields` | `jsonb` | `NOT NULL` | Массив колонок: `code`, `name`, `type`, `default` |
+| `fields` | `jsonb` | `NOT NULL` | Ревизии колонок: `field_id`, `code`, `name`, `type`, `default`, `valid_from`, `valid_to` |
 
 Индексы и ограничения:
 
@@ -49,10 +49,12 @@ erDiagram
 Правила работы:
 
 + `POST /admin/dictionaries` вставляет строку со `status = active`
-+ `PATCH /admin/dictionaries/{dictionary_code}` меняет `dictionary_name`, `owner` и `fields`. `dictionary_code` и строки `dictionary_row` не меняет
-+ `POST /admin/dictionaries/{dictionary_code}/deactivate` ставит `inactive`. Строки значений остаются
-+ в `fields` ровно одна колонка с `"default": true`. Её `code` пользователь получает, когда не назвал атрибут
++ `PATCH /admin/dictionaries/{dictionary_code}` меняет `dictionary_name`, `owner` и ревизии `fields`. Строки `dictionary_row` не меняет
++ одна и та же колонка во всех ревизиях хранит один `field_id`. Переименование и смена типа закрывают прежнюю ревизию и открывают новую с тем же `field_id`. Удаление только закрывает ревизию. Новая колонка получает новый `field_id`
++ у ревизии пустой `valid_to` — она открыта. Конец исключительный, как у строки значения
++ среди открытых ревизий ровно одна с `"default": true`
 + `type` — одно из `string`, `integer`, `number`, `boolean`
++ `POST /admin/dictionaries/{dictionary_code}/deactivate` ставит `inactive`. Строки значений остаются
 
 ## Таблица `dictionary_row`
 
@@ -64,7 +66,7 @@ erDiagram
 | `value_code` | `varchar(64)` | `NOT NULL`, входит в `PK` | Код значения |
 | `valid_from` | `timestamptz` | `NOT NULL`, входит в `PK` | Начало состояния, включительно |
 | `valid_to` | `timestamptz` | `NULL` | Конец состояния, исключительно. Пусто у открытого состояния |
-| `data` | `jsonb` | `NOT NULL` | Поля значения. Ключи — `code` колонок паспорта |
+| `data` | `jsonb` | `NOT NULL` | Поля значения. Ключ — `code` ревизии, которая была открыта в `valid_from` этой строки |
 
 Индексы и ограничения:
 

@@ -66,7 +66,7 @@ POST **/admin/dictionaries**
         + Код: `dictionary_already_exists`
         + Статус: `409`
 2. Начать транзакцию.
-3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`, `fields` как в запросе.
+3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`. Каждой колонке назначить `field_id`, `valid_from` — время запроса, `valid_to` пуст.
 4. Создать секцию `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`.
     + Ошибка выполнения:
         + Код: `script_failed`

@@ -37,7 +37,7 @@ GET **/dictionaries/{dictionary_code}/columns**
     + `status = inactive`:
         + Код: `dictionary_inactive`
         + Статус: `409`
-3. Вернуть `fields` как `columns`. Статус `200`.
+3. Вернуть открытые ревизии `fields` как `columns`, без `field_id` и без закрытых ревизий. Статус `200`.
 
 ```mermaid
 flowchart TD
