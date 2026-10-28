@@ -30,7 +30,7 @@ POST **/admin/dictionaries**
 + `fields[].code`:
     + Обязательно
     + `^[a-z][a-z0-9_]{0,62}$`
-    + Не `value_code`, `parent_code`, `valid_from`, `valid_to`
+    + Не `value_code`, `valid_from`, `valid_to`
 + `fields[].name`:
     + Обязательно
     + От 1 до 200 символов

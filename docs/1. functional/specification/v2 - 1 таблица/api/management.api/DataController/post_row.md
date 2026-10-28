@@ -19,11 +19,6 @@ POST **/admin/dictionaries/{dictionary_code}/rows**
     + body
     + Обязательно
     + Момент `YYYY-MM-DDTHH:mm:ssZ`
-+ `parent_code`:
-    + body
-    + Не обязательно
-    + Пусто или `^[A-Za-z0-9_]{1,64}$`
-    + Наличие такого кода не проверяется
 + `attributes`:
     + body
     + Обязательно
@@ -34,7 +29,6 @@ POST **/admin/dictionaries/{dictionary_code}/rows**
 # Поля ответа
 
 + `value_code`
-+ `parent_code`
 + `valid_from`
 + `valid_to` — пусто
 + `data`
@@ -70,7 +64,7 @@ POST **/admin/dictionaries/{dictionary_code}/rows**
         + Статус: `409`
 3. Начать транзакцию.
 4. Если открытая строка есть, записать ей `valid_to` = новый `valid_from`.
-5. Вставить строку: `valid_to` пуст, `data` = `attributes`, `parent_code` из тела.
+5. Вставить строку: `valid_to` пуст, `data` = `attributes`.
 6. Зафиксировать транзакцию. Вернуть статус `201`.
 
 ```mermaid
@@ -85,4 +79,4 @@ flowchart TD
   ins --> ok["201"]
 ```
 
-Проверка типов выполняется до записи. Уже лежащие в `data` значения прошлых состояний не читаются и не исправляются. `parent_code` в другие строки не ищется.
+Проверка типов выполняется до записи. Уже лежащие в `data` значения прошлых состояний не читаются и не исправляются. Код в атрибуте не ищется в других строках.

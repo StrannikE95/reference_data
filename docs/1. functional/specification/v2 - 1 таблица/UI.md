@@ -144,6 +144,13 @@
         <td></td>
       </tr>
       <tr>
+        <td>kind_code</td>
+        <td><input value="Вид"></td>
+        <td>string</td>
+        <td><input type="radio"></td>
+        <td><button>Удалить</button></td>
+      </tr>
+      <tr>
         <td><input value="is_bearing"></td>
         <td><input value="Несущая"></td>
         <td>
@@ -209,9 +216,9 @@
       <tr>
         <th>Код</th>
         <th>Название</th>
+        <th>Вид</th>
         <th>Несущая</th>
         <th>Плотность</th>
-        <th>Родитель</th>
         <th>Начало</th>
         <th>Конец</th>
       </tr>
@@ -220,27 +227,27 @@
       <tr>
         <td>BRICK</td>
         <td>Кирпич керамический</td>
+        <td>STONE</td>
         <td>да</td>
         <td>1800</td>
-        <td>STONE</td>
         <td>20.10.2026 00:00</td>
         <td>—</td>
       </tr>
       <tr>
         <td>TIMBER</td>
         <td>Брус</td>
+        <td>WOOD</td>
         <td>нет</td>
         <td>500</td>
-        <td>WOOD</td>
         <td>01.01.2024 00:00</td>
         <td>—</td>
       </tr>
       <tr>
         <td>STEEL</td>
         <td>Сталь</td>
+        <td>METAL</td>
         <td>да</td>
         <td>7850</td>
-        <td>METAL</td>
         <td>20.10.2026 00:00</td>
         <td>—</td>
       </tr>
@@ -250,8 +257,8 @@
   <h2>Новое состояние</h2>
   <label>Код <input value="BRICK"></label>
   <label>Начало <input type="datetime-local" value="2026-10-20T00:00"></label>
-  <label>Родитель <input value="STONE"></label>
   <label>Название <input value="Кирпич керамический"></label>
+  <label>Вид <input value="STONE"></label>
   <label>Несущая
     <select>
       <option>да</option>

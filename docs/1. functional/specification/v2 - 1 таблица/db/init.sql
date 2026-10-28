@@ -19,7 +19,6 @@ CREATE UNIQUE INDEX ux_dictionary_code
 CREATE TABLE dictionary_row (
     dictionary_code varchar(63)  NOT NULL,
     value_code      varchar(64)  NOT NULL,
-    parent_code     varchar(64)  NULL,
     valid_from      timestamptz  NOT NULL,
     valid_to        timestamptz  NULL,
     data            jsonb        NOT NULL,

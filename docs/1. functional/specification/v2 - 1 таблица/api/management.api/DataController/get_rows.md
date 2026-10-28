@@ -34,7 +34,6 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 + `items`:
     + Массив
     + `value_code`
-    + `parent_code` — может быть пустым
     + `valid_from`
     + `valid_to` — может быть пустым
     + `data`

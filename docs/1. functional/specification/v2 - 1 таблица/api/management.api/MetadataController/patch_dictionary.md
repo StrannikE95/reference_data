@@ -30,7 +30,7 @@ PATCH **/admin/dictionaries/{dictionary_code}**
 + `fields[].code`:
     + Обязательно, если `fields` передан
     + `^[a-z][a-z0-9_]{0,62}$`
-    + Не `value_code`, `parent_code`, `valid_from`, `valid_to`
+    + Не `value_code`, `valid_from`, `valid_to`
 + `fields[].name`:
     + Обязательно, если `fields` передан
     + От 1 до 200 символов

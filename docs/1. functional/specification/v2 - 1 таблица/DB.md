@@ -2,7 +2,7 @@
 
 Пустая база поднимается скриптом [init.sql](db/init.sql): паспорт `dictionary` и секционированная таблица `dictionary_row`. Секция справочника в скрипт не входит: её создаёт паспорт.
 
-Все справочники хранят значения в `dictionary_row`. Поля значения лежат в `data`. История значения — соседняя строка с другим периодом, а не копия всего справочника. Внешнего ключа на родителя нет: `parent_code` ищется в той же таблице на тот же момент.
+Все справочники хранят значения в `dictionary_row`. Поля значения, в том числе код связанной записи, лежат в `data` и перечислены в `fields` наравне с остальными колонками. История значения — соседняя строка с другим периодом, а не копия всего справочника.
 
 ## ER-диаграмма
 
@@ -22,7 +22,6 @@ erDiagram
     DICTIONARY_ROW {
         varchar dictionary_code PK
         varchar value_code PK
-        varchar parent_code
         timestamptz valid_from PK
         timestamptz valid_to
         jsonb data
@@ -63,7 +62,6 @@ erDiagram
 | --- | --- | --- | --- |
 | `dictionary_code` | `varchar(63)` | `NOT NULL`, входит в `PK` | Код справочника и ключ секции |
 | `value_code` | `varchar(64)` | `NOT NULL`, входит в `PK` | Код значения |
-| `parent_code` | `varchar(64)` | `NULL` | Код родителя в этой же таблице. Наличие не проверяется |
 | `valid_from` | `timestamptz` | `NOT NULL`, входит в `PK` | Начало состояния, включительно |
 | `valid_to` | `timestamptz` | `NULL` | Конец состояния, исключительно. Пусто у открытого состояния |
 | `data` | `jsonb` | `NOT NULL` | Поля значения. Ключи — `code` колонок паспорта |
@@ -73,7 +71,6 @@ erDiagram
 + первичный ключ `(dictionary_code, value_code, valid_from)`
 + `ix_dictionary_row_code` на `(dictionary_code, value_code, valid_from)`
 + секция `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`
-+ внешнего ключа с `parent_code` нет
 + база не проверяет ключи и типы внутри `data`
 
 Правила работы:
