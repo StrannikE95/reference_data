@@ -27,6 +27,7 @@ GET **/dictionaries/{dictionary_code}/columns**
     + `name`
     + `type`
     + `default`
+    + `required` — `true`, если значение этой колонки у элемента обязательно
 
 # Алгоритм работы
 

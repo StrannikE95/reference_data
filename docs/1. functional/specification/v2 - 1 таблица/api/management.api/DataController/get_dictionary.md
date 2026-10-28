@@ -32,6 +32,7 @@ GET **/admin/dictionaries/{dictionary_code}**
         + `name`
         + `type`
         + `default`
+        + `required`
 
 # Алгоритм работы
 

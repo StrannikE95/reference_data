@@ -38,6 +38,10 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 + `fields[].default`:
     + Обязательно
     + `true` или `false`
++ `fields[].required`:
+    + Обязательно
+    + `true` — значение у элемента справочника обязательно
+    + `false` — значение можно не передавать или оставить пустым
 
 # Поля ответа
 
@@ -51,12 +55,13 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + `name`
     + `type`
     + `default`
+    + `required`
 
 # Алгоритм работы
 
 ## Валидация
 
-1. Проверить путь и тело: состав `fields`, шаблон `code`, запрещённые имена, уникальность `code` и `field_id`, ровно один `default = true`, не больше 50 колонок.
+1. Проверить путь и тело: состав `fields`, шаблон `code`, запрещённые имена, уникальность `code` и `field_id`, ровно один `default = true`, у каждой колонки `required` равен `true` или `false`, не больше 50 колонок.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
@@ -82,7 +87,7 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + тот же `field_id` и другой `code` — переименование. Другой `type` — смена типа. `field_id` не пришёл — колонка в черновик не входит
 3. Сравнить новый список с прежним `fields` черновика по `field_id`, `code` и `type`.
     + Список отличается — удалить строки `dictionary_row` с этим `version_id` и `row_status = draft`. Опубликованные строки не трогать. `rows_cleared = true`
-    + Совпадает набор, коды и типы, изменились только `name` или `default` — черновые строки оставить. `rows_cleared = false`
+    + Совпадает набор, коды и типы, изменились только `name`, `default` или `required` — черновые строки оставить. `rows_cleared = false`
 4. Заменить `fields` черновика. Версию `active` не менять. Вернуть статус `200`.
 
 ```mermaid
@@ -97,4 +102,4 @@ flowchart TD
   keep --> ok
 ```
 
-Активная схема от этой записи не меняется. После очистки строк каждый открытый код записывается заново через [post_row.md](../DataController/post_row.md). Без этих строк [post_publish.md](post_publish.md) черновик с изменёнными колонками не публикует. Колонка, убранная из черновика, возвращается только как новая, с новым `field_id`.
+Активная схема от этой записи не меняется. Если состав атрибутов изменился, справочник перезаливается через [post_row.md](../DataController/post_row.md). Без перезаливки [post_publish.md](post_publish.md) черновик не публикует. Колонка, убранная из черновика, возвращается только как новая, с новым `field_id`.
