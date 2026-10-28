@@ -3,7 +3,7 @@
 # Описание
 
 GET **/admin/dictionaries/{dictionary_code}/rows**
-Страница состояний одного справочника: открытые либо попавшие в переданный момент.
+Страница состояний одного справочника: опубликованные открытые, на момент либо черновые.
 
 # Входные параметры
 
@@ -15,7 +15,12 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
     + query
     + Не обязательно
     + Момент `YYYY-MM-DDTHH:mm:ssZ`
-    + Нет параметра — только строки с пустым `valid_to`
+    + Вместе с `draft` нельзя
++ `draft`:
+    + query
+    + Не обязательно
+    + `true` — строки `row_status = draft`
+    + Нет параметра и нет `at` — опубликованные строки с пустым `valid_to`
 + `value_code`:
     + query
     + Не обязательно
@@ -34,6 +39,8 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 + `items`:
     + Массив
     + `value_code`
+    + `version_id`
+    + `row_status`
     + `valid_from`
     + `valid_to` — может быть пустым
     + `data`
@@ -43,11 +50,14 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 
 ## Валидация
 
-1. Проверить путь, формат `at`, `value_code`, `limit` и `cursor`.
+1. Проверить путь, формат `at`, `draft`, `value_code`, `limit` и `cursor`. `draft=true` вместе с `at`:
+    + Код: `selector_conflict`
+    + Статус: `400`
+2. Проверить остальные поля пути и запроса.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Найти паспорт по коду без учёта регистра.
+3. Найти паспорт по коду без учёта регистра.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
@@ -55,8 +65,11 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 ## Бизнес-логика
 
 1. Выбрать строки секции этого `dictionary_code`.
-    + `at` не передан — `valid_to` пуст
-    + `at` передан — `valid_from <= at` и (`valid_to` пуст или `valid_to > at`)
+    + `draft=true` — `row_status = draft`. Черновика нет:
+        + Код: `draft_not_found`
+        + Статус: `404`
+    + `at` передан — `row_status = published`, `valid_from <= at` и (`valid_to` пуст или `valid_to > at`)
+    + оба не переданы — `row_status = published` и `valid_to` пуст
     + `value_code` передан — только этот код
 2. Отдать страницу в порядке `value_code`, затем `valid_from`. `next_cursor` пустой, если продолжения нет.
 3. Вернуть статус `200`. Деактивированный справочник тоже читается.
@@ -64,11 +77,15 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 ```mermaid
 flowchart TD
   found{"Паспорт есть"} -->|нет| miss["404 dictionary_not_found"]
-  found -->|да| mode{"Передан at"}
-  mode -->|нет| open["valid_to пуст"]
-  mode -->|да| moment["период покрывает at"]
+  found -->|да| mode{"Что передано"}
+  mode -->|ничего| open["published и valid_to пуст"]
+  mode -->|at| moment["published, период покрывает at"]
+  mode -->|draft| drow{"Черновик есть"}
+  drow -->|нет| none["404 draft_not_found"]
+  drow -->|да| drafts["строки draft"]
   open --> ok["200"]
   moment --> ok
+  drafts --> ok
 ```
 
-Состав колонок из паспорта на это чтение не накладывается: администратор видит `data` как оно хранится.
+Администратор видит `data` как оно хранится. Черновые строки доступны тем же методом, что и строки на момент: отдельным параметром, без публикации.

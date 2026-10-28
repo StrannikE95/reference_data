@@ -3,7 +3,7 @@
 # Описание
 
 GET **/dictionaries/{dictionary_code}/columns**
-Названия и типы колонок активного справочника. По этим `code` клиент собирает параметр `attribute` чтения значения.
+Названия и типы колонок. Без `draft` это активная версия. С `draft=true` — черновик. По этим `code` клиент собирает параметр `attribute`.
 
 # Входные параметры
 
@@ -11,6 +11,10 @@ GET **/dictionaries/{dictionary_code}/columns**
     + path
     + Обязательно
     + `^[a-z][a-z0-9_]{0,62}$`
++ `draft`:
+    + query
+    + Не обязательно
+    + `true` — колонки черновика
 
 Тела нет.
 
@@ -37,7 +41,14 @@ GET **/dictionaries/{dictionary_code}/columns**
     + `status = inactive`:
         + Код: `dictionary_inactive`
         + Статус: `409`
-3. Вернуть открытые ревизии `fields` как `columns`, без `field_id` и без закрытых ревизий. Статус `200`.
+3. Выбрать версию.
+    + `draft=true` — версия `draft`. Её нет:
+        + Код: `draft_not_found`
+        + Статус: `404`
+    + иначе версия `active`. Её нет:
+        + Код: `no_active_version`
+        + Статус: `404`
+4. Вернуть `fields` этой версии как `columns`, без `field_id`. Статус `200`.
 
 ```mermaid
 flowchart TD
@@ -45,7 +56,9 @@ flowchart TD
   fmt -->|да| found{"Паспорт"}
   found -->|нет| miss["404 dictionary_not_found"]
   found -->|inactive| off["409 dictionary_inactive"]
-  found -->|active| ok["200"]
+  found -->|active| ver{"Есть нужная версия"}
+  ver -->|нет| missVer["404 no_active_version или draft_not_found"]
+  ver -->|да| ok["200"]
 ```
 
 Метод не читает `dictionary_row` и не показывает, какие ключи уже лежат в `data`.

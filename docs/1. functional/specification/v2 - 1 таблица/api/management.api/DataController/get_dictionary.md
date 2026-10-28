@@ -21,12 +21,17 @@ GET **/admin/dictionaries/{dictionary_code}**
 + `dictionary_name`
 + `owner`
 + `status`
-+ `fields` — открытые ревизии, `valid_to` пуст:
-    + `field_id`
-    + `code`
-    + `name`
-    + `type`
-    + `default`
++ `versions`:
+    + `version_id`
+    + `status`
+    + `valid_from` — пусто у черновика
+    + `valid_to` — пусто у черновика и активной
+    + `fields`:
+        + `field_id`
+        + `code`
+        + `name`
+        + `type`
+        + `default`
 
 # Алгоритм работы
 
@@ -43,7 +48,7 @@ GET **/admin/dictionaries/{dictionary_code}**
 
 ## Бизнес-логика
 
-1. Вернуть паспорт и открытые ревизии `fields`. Закрытые ревизии не отдавать. Статус `200`. Деактивированный справочник тоже возвращается.
+1. Вернуть паспорт и все версии, включая `draft` и `closed`. Статус `200`. Деактивированный справочник тоже возвращается.
 
 ```mermaid
 flowchart TD

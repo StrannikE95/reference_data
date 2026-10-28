@@ -3,7 +3,7 @@
 # Описание
 
 POST **/admin/dictionaries**
-Создать паспорт и пустую секцию общей таблицы. Строки значений не создаются.
+Создать паспорт, пустую секцию и версию `1` со статусом `draft`. Активной версии нет. Строки значений не создаются.
 
 # Входные параметры
 
@@ -48,7 +48,9 @@ POST **/admin/dictionaries**
 + `dictionary_name`
 + `owner`
 + `status` = `active`
-+ `fields`
++ `version_id` = `1`
++ `version_status` = `draft`
++ `fields` — с назначенными `field_id`
 
 # Алгоритм работы
 
@@ -66,21 +68,22 @@ POST **/admin/dictionaries**
         + Код: `dictionary_already_exists`
         + Статус: `409`
 2. Начать транзакцию.
-3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`. Каждой колонке назначить `field_id`, `valid_from` — время запроса, `valid_to` пуст.
-4. Создать секцию `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`.
+3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`.
+4. Вставить `dictionary_version`: `version_id = 1`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`.
+5. Создать секцию `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`.
     + Ошибка выполнения:
         + Код: `script_failed`
         + Статус: `500`
         + Транзакция откатывается
-5. Зафиксировать транзакцию. Вернуть статус `201`.
+6. Зафиксировать транзакцию. Вернуть статус `201`.
 
 ```mermaid
 flowchart TD
   uniq{"Код свободен"} -->|нет| exists["409 dictionary_already_exists"]
-  uniq -->|да| row["INSERT dictionary"]
+  uniq -->|да| row["INSERT dictionary и версия draft"]
   row --> part["CREATE PARTITION"]
   part -->|ошибка| bad["500 script_failed"]
   part -->|да| ok["COMMIT и 201"]
 ```
 
-Секция создаётся пустой. Колонки значения в таблицу не добавляются: они описаны в `fields` и пишутся в `data`.
+Секция создаётся пустой. Колонки описаны в черновике и ещё не действуют для запросов без `draft`. Активной схема становится через [post_publish.md](post_publish.md).
