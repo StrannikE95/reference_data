@@ -7,6 +7,11 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
+
 + `dictionary_code`:
     + path
     + Обязательно
@@ -51,14 +56,20 @@ GET **/admin/dictionaries/{dictionary_code}/rows**
 
 ## Валидация
 
-1. Проверить путь, формат `at`, `draft`, `value_code`, `limit` и `cursor`. `draft=true` вместе с `at`:
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет либо роль не `admin`:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить путь, формат `at`, `draft`, `value_code`, `limit` и `cursor`. `draft=true` вместе с `at`:
     + Код: `selector_conflict`
     + Статус: `400`
-2. Проверить остальные поля пути и запроса.
+4. Проверить остальные поля пути и запроса.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-3. Найти паспорт по коду без учёта регистра.
+5. Найти паспорт по коду без учёта регистра.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`

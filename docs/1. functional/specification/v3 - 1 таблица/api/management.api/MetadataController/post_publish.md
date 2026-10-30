@@ -7,6 +7,11 @@ POST **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}/publis
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
+
 + `dictionary_code`:
     + path
     + Обязательно
@@ -30,15 +35,21 @@ POST **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}/publis
 
 ## Валидация
 
-1. Проверить путь.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет либо роль не `admin`:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить путь.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Найти паспорт по коду без учёта регистра.
+4. Найти паспорт по коду без учёта регистра.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
-3. Найти версию с этим `scheme_version_id`.
+5. Найти версию с этим `scheme_version_id`.
     + Нет:
         + Код: `version_not_found`
         + Статус: `404`

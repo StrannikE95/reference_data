@@ -7,6 +7,11 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}**
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
+
 + `dictionary_code`:
     + path
     + Обязательно
@@ -67,15 +72,21 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}**
 
 ## Валидация
 
-1. Проверить путь и тело: состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code` и `field_id`, колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, у `reference` есть `dictionary_code` по шаблону кода справочника, у остальных типов этого поля нет, не больше 50 колонок, поля `default` нет.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет либо роль не `admin`:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить путь и тело: состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code` и `field_id`, колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, у `reference` есть `dictionary_code` по шаблону кода справочника, у остальных типов этого поля нет, не больше 50 колонок, поля `default` нет.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Найти паспорт по коду без учёта регистра.
+4. Найти паспорт по коду без учёта регистра.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
-3. Найти версию с этим `scheme_version_id`.
+5. Найти версию с этим `scheme_version_id`.
     + Нет:
         + Код: `version_not_found`
         + Статус: `404`

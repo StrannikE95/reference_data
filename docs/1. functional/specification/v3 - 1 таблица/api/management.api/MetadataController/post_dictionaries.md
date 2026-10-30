@@ -7,6 +7,11 @@ POST **/admin/dictionaries**
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
+
 + `dictionary_code`:
     + body
     + Обязательно
@@ -65,7 +70,13 @@ POST **/admin/dictionaries**
 
 ## Валидация
 
-1. Проверить тело: шаблон `dictionary_code`, длины, состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, у `reference` есть `dictionary_code` по шаблону кода справочника, у остальных типов этого поля нет, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет либо роль не `admin`:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить тело: шаблон `dictionary_code`, длины, состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, у `reference` есть `dictionary_code` по шаблону кода справочника, у остальных типов этого поля нет, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`

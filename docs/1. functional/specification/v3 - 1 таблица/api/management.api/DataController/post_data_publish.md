@@ -11,6 +11,11 @@ POST **/admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}/pub
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
+
 + `dictionary_code`:
     + path
     + Обязательно
@@ -39,15 +44,21 @@ POST **/admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}/pub
 
 ## Валидация
 
-1. Проверить путь. `type` равен `delta` или `full`.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет либо роль не `admin`:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить путь. `type` равен `delta` или `full`.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Найти паспорт по коду без учёта регистра.
+4. Найти паспорт по коду без учёта регистра.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
-3. Найти версию данных с этим `data_version_id`.
+5. Найти версию данных с этим `data_version_id`.
     + Нет:
         + Код: `version_not_found`
         + Статус: `404`

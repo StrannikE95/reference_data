@@ -7,6 +7,11 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
+
 + `dictionary_code`:
     + path
     + Обязательно
@@ -34,11 +39,17 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
 
 ## Валидация
 
-1. Проверить путь.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет либо роль не `admin`:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить путь.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Найти паспорт по коду без учёта регистра.
+4. Найти паспорт по коду без учёта регистра.
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`

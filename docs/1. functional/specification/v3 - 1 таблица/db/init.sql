@@ -55,3 +55,17 @@ CREATE TABLE dictionary_row (
 
 CREATE INDEX ix_dictionary_row_code
     ON dictionary_row (dictionary_code, value_code, valid_from);
+
+CREATE TABLE caller (
+    caller_id uuid        PRIMARY KEY,
+    role      varchar(16) NOT NULL,
+    CONSTRAINT caller_role_check
+        CHECK (role IN ('admin', 'system', 'user'))
+);
+
+CREATE TABLE caller_dictionary (
+    caller_id       uuid        NOT NULL
+        REFERENCES caller (caller_id),
+    dictionary_code varchar(63) NOT NULL,
+    PRIMARY KEY (caller_id, dictionary_code)
+);

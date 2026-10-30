@@ -1,6 +1,6 @@
 # Схема БД для API справочников
 
-Пустая база поднимается скриптом [init.sql](db/init.sql): паспорт `dictionary`, версии схемы `scheme_version`, версии данных `data_version` и секционированная таблица `dictionary_row`. Секция справочника в скрипт не входит: её создаёт паспорт.
+Пустая база поднимается скриптом [init.sql](db/init.sql): паспорт `dictionary`, версии схемы `scheme_version`, версии данных `data_version`, секционированная таблица `dictionary_row`, вызывающие `caller` и их наборы `caller_dictionary`. Секция справочника в скрипт не входит: её создаёт паспорт.
 
 Все справочники хранят значения в `dictionary_row`. Полная схема лежит в `scheme` версии схемы. Строка помнит версию данных, а версия данных — схему, в которой её записали. Правка значений открывает новую версию данных и не открывает новую схему. У справочника одновременно не больше одной схемы `draft` и одной `active`, и не больше одной версии данных `draft`. История значения — соседняя опубликованная строка с другим периодом, а не копия всего справочника.
 
@@ -11,6 +11,7 @@ erDiagram
     DICTIONARY ||--o{ SCHEME_VERSION : schema
     SCHEME_VERSION ||--o{ DATA_VERSION : describes
     DATA_VERSION ||--o{ DICTIONARY_ROW : stores
+    CALLER ||--o{ CALLER_DICTIONARY : reads
 
     DICTIONARY {
         uuid dictionary_id PK
@@ -45,6 +46,16 @@ erDiagram
         timestamptz valid_from
         timestamptz valid_to
         jsonb data
+    }
+
+    CALLER {
+        uuid caller_id PK
+        varchar role
+    }
+
+    CALLER_DICTIONARY {
+        uuid caller_id PK
+        varchar dictionary_code PK
     }
 ```
 
@@ -146,8 +157,47 @@ erDiagram
 + у черновой строки `valid_from` заполнен. Пока версия данных не опубликована, эта дата открытую строку не закрывает
 + ключ в `data` — `code` колонки схемы, на которую ссылается версия данных. Чтение находит значение по `field_id`
 
+## Таблица `caller`
+
+Вызывающий и его роль. Идентификатор приходит в заголовке `X-Caller-Id`.
+
+| Поле | Тип | Ограничения | Назначение |
+| --- | --- | --- | --- |
+| caller_id | uuid | PK | Идентификатор вызывающего |
+| role | varchar(16) | NOT NULL | `admin` — все методы и все справочники. `system` — только чтение, все справочники. `user` — только чтение, справочники из `caller_dictionary` |
+
+Индексы и ограничения:
+
++ первичный ключ `caller_id`
++ `caller_role_check`: `admin`, `system` или `user`
+
+Правила работы:
+
++ строку `admin` или `system` вносят при развёртывании
++ строку `user` создаёт [put_dictionaries.md](api/management.api/CallerController/put_dictionaries.md), если этого `caller_id` ещё нет
++ набор в `caller_dictionary` хранится у роли `user`
+
+## Таблица `caller_dictionary`
+
+Набор справочников одного обычного пользователя.
+
+| Поле | Тип | Ограничения | Назначение |
+| --- | --- | --- | --- |
+| caller_id | uuid | PK, FK -> caller.caller_id | Обычный пользователь |
+| dictionary_code | varchar(63) | PK | Код справочника из `dictionary.dictionary_code` |
+
+Индексы и ограничения:
+
++ первичный ключ `(caller_id, dictionary_code)`
+
+Правила работы:
+
++ запись набора заменяет все строки этого `caller_id`
++ код сверяется с паспортом при записи. Внешнего ключа нет: уникальность кода паспорта — индекс по `lower(dictionary_code)`
+
 ## Связи между таблицами
 
 + `dictionary 1 -> N scheme_version`
 + `scheme_version 1 -> N data_version`
 + `data_version 1 -> N dictionary_row` по `data_version_id` внутри секции `dictionary_code`, без внешнего ключа
++ `caller 1 -> N caller_dictionary`

@@ -17,6 +17,8 @@
 | admin | DataController | `POST /admin/dictionaries/{dictionary_code}/rows/csv` | [Загрузить строки из csv](api/management.api/DataController/post_rows_csv.md) |
 | admin | DataController | `POST /admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}/publish/{type}` | [Опубликовать значения](api/management.api/DataController/post_data_publish.md) |
 | admin | DataController | `DELETE /admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}` | [Удалить черновик значений](api/management.api/DataController/delete_data_version.md) |
+| admin | CallerController | `GET /admin/callers/{caller_id}` | [Роль и набор справочников](api/management.api/CallerController/get_caller.md) |
+| admin | CallerController | `PUT /admin/callers/{caller_id}/dictionaries` | [Записать набор справочников](api/management.api/CallerController/put_dictionaries.md) |
 | service | CatalogController | `GET /dictionaries` | [Активные справочники](api/service.api/CatalogController/get_dictionaries.md) |
 | service | CatalogController | `GET /dictionaries/{dictionary_code}/columns` | [Названия и типы колонок](api/service.api/CatalogController/get_columns.md) |
 | service | DataController | `GET /dictionaries/{dictionary_code}/values/{value_code}` | [Значение по коду](api/service.api/DataController/get_value.md) |
@@ -26,6 +28,9 @@
 |Код состояния (status)|Код ошибки (code)|Расшифровка|Описание|
 |-|-|-|-|
 |400|`invalid_request`|Некорректный запрос|-|
+|403|`forbidden`|Вызов не разрешён|Нет строки `caller`, роль не пускает в этот метод, либо у `user` нет этого справочника в наборе|
+|404|`caller_not_found`|Вызывающий не найден|-|
+|409|`caller_not_user`|Набор записывается только роли `user`|`caller_id` уже занят ролью `admin` или `system`|
 |400|`selector_conflict`|Вместе переданы `draft` и `at`|-|
 |404|`dictionary_not_found`|Справочник не найден|-|
 |404|`no_active_version`|Нет активной версии|-|

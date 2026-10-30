@@ -7,6 +7,10 @@ GET **/dictionaries**
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
 + `limit`:
     + query
     + Не обязательно
@@ -26,17 +30,25 @@ GET **/dictionaries**
 
 # Алгоритм работы
 
-1. Проверить `limit` и `cursor`.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет:
+    + Код: `forbidden`
+    + Статус: `403`
+3. Проверить `limit` и `cursor`.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
-2. Прочитать страницу `dictionary` со `status = active` и с версией `active`, в порядке `dictionary_code`, после курсора.
-3. Вернуть статус `200`. Если продолжения нет, `next_cursor` пустой.
+4. Прочитать страницу `dictionary` со `status = active` и с версией `active`, в порядке `dictionary_code`, после курсора. Роль `user` оставляет коды из `caller_dictionary` этого `caller_id`. Роль `admin` или `system` отдаёт страницу без этого отбора.
+5. Вернуть статус `200`. Если продолжения нет, `next_cursor` пустой.
 
 ```mermaid
 flowchart TD
   fmt{"limit и cursor"} -->|нет| bad["400 invalid_request"]
-  fmt -->|да| page["Только active"]
+  fmt -->|да| who{"caller есть"}
+  who -->|нет| deny["403 forbidden"]
+  who -->|да| page["active, у user его набор"]
   page --> ok["200"]
 ```
 

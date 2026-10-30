@@ -7,6 +7,10 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
 
 # Входные параметры
 
++ `X-Caller-Id`:
+    + header
+    + Обязательно
+    + uuid
 + `dictionary_code`:
     + path
     + Обязательно
@@ -64,17 +68,26 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
 
 # Алгоритм работы
 
-1. По `dictionary_code` найти справочник.
+1. Прочитать заголовок `X-Caller-Id`: uuid. Нет заголовка или значение не uuid:
+    + Код: `invalid_request`
+    + Статус: `400`
+2. Найти `caller` по этому идентификатору. Строки нет:
+    + Код: `forbidden`
+    + Статус: `403`
+3. По `dictionary_code` найти справочник.
     + Путь, формат `at` или список `attribute` неверен, либо `attributes_all=true` передан вместе с `attribute`:
         + Код: `invalid_request`
         + Статус: `400`
     + Паспорта нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
+    + Роль `user` и `dictionary_code` нет в `caller_dictionary` этого `caller_id`:
+        + Код: `forbidden`
+        + Статус: `403`
     + Паспорт `inactive`:
         + Код: `dictionary_inactive`
         + Статус: `409`
-2. По `at` и `draft` выбрать редакцию и её схему. Схема — `scheme` этой версии.
+4. По `at` и `draft` выбрать редакцию и её схему. Схема — `scheme` этой версии.
     + `draft=true` вместе с `at`:
         + Код: `selector_conflict`
         + Статус: `400`
@@ -93,7 +106,7 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
             + Код: `unknown_field`
             + Статус: `422`
         + Имена нашлись, атрибуты не переданы или передан `attributes_all=true` — статус `200`, `result = absent`, значения пустые. Строку не искать
-3. Проверить атрибутивный состав запроса по выбранной схеме.
+5. Проверить атрибутивный состав запроса по выбранной схеме.
     + `attribute` не передан — в запрос входит колонка `name` выбранной схемы
     + Редакции `draft` и `active`. Переданы имена — каждое имя есть в `code` выбранной схемы. Иначе:
         + Код: `unknown_field`
@@ -102,7 +115,7 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
         + Код: `unknown_field`
         + Статус: `422`
     + `attributes_all=true` — в запрос входят все колонки выбранной схемы
-4. Собрать ответ по запрошенным атрибутам и выбранной схеме.
+6. Собрать ответ по запрошенным атрибутам и выбранной схеме.
     + Найти строку этого `value_code` в редакции:
         + `draft` — `status = draft` черновика версии данных. Опубликованная строка не подставляется
         + `active` — `status = published` и пустой `valid_to`. Это открытое состояние, в том числе если его `valid_from` ещё не наступил
@@ -119,8 +132,11 @@ GET **/dictionaries/{dictionary_code}/values/{value_code}**
 ```mermaid
 flowchart TD
   fmt{"Формат запроса"} -->|нет| bad["400 invalid_request"]
-  fmt -->|да| dict{"Справочник"}
+  fmt -->|да| who{"caller есть"}
+  who -->|нет| deny["403 forbidden"]
+  who -->|да| dict{"Справочник"}
   dict -->|нет| miss["404 dictionary_not_found"]
+  dict -->|"нет в наборе user"| deny
   dict -->|inactive| off["409 dictionary_inactive"]
   dict -->|да| ed{"Редакция по at и draft"}
   ed -->|draft и at| conf["400 selector_conflict"]
