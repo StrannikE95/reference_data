@@ -78,7 +78,7 @@ erDiagram
 
 + у справочника не больше одной версии `draft` и одной `active`
 + одна и та же колонка в разных версиях хранит один `field_id`. Новый `field_id` — новая колонка. Тот же `field_id` и другой `code` — переименование. Тот же `field_id` и другой `type` — смена типа. `field_id` нет в новой версии — колонка удалена
-+ в `fields` версии ровно одна колонка с `"default": true`
++ в `fields` каждой версии есть колонка `code = name`. У неё `type = string`, `required = true`, `"default": true`. Другой колонки с `"default": true` нет. Её `field_id` не меняется, колонка не удаляется, `code`, `type` и `required` не меняются. Меняется только подпись
 + `type` — одно из `string`, `integer`, `number`, `boolean`
 
 ## Таблица `dictionary_row`

@@ -32,8 +32,8 @@ GET **/admin/dictionaries/{dictionary_code}**
         + `code`
         + `name`
         + `type`
-        + `default`
-        + `required`
+        + `default` — `true` только у колонки `code = name`
+        + `required` — у колонки `code = name` всегда `true`
 
 # Алгоритм работы
 

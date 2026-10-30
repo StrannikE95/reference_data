@@ -26,7 +26,7 @@ POST **/admin/dictionaries**
     + body
     + Обязательно
     + От 1 до 50 колонок
-    + Ровно одна колонка с `default = true`
+    + Ровно одна колонка с `code = name`: `type = string`, `required = true`. Это атрибут по умолчанию, клиент его не назначает
     + Одинаковые `code` нельзя
 + `fields[].code`:
     + Обязательно
@@ -38,13 +38,12 @@ POST **/admin/dictionaries**
 + `fields[].type`:
     + Обязательно
     + `string`, `integer`, `number`, `boolean`
-+ `fields[].default`:
-    + Обязательно
-    + `true` или `false`
+    + У колонки `code = name` только `string`
 + `fields[].required`:
     + Обязательно
     + `true` — у элемента справочника значение этой колонки должно быть заполнено
     + `false` — значение можно не передавать или передать пустым
+    + У колонки `code = name` только `true`
 
 # Поля ответа
 
@@ -55,13 +54,13 @@ POST **/admin/dictionaries**
 + `status` = `active`
 + `version_id` = `1`
 + `version_status` = `draft`
-+ `fields` — с назначенными `field_id`
++ `fields` — с назначенными `field_id`. У колонки `code = name` в ответе `default = true`, у остальных `false`. У колонки `name` `default = true`, у остальных `false`
 
 # Алгоритм работы
 
 ## Валидация
 
-1. Проверить тело: шаблон `dictionary_code`, длины, состав `fields`, шаблон `code`, запрещённые имена, уникальность `code`, ровно один `default = true`, у каждой колонки `required` равен `true` или `false`, не больше 50 колонок, неизвестных полей нет.
+1. Проверить тело: шаблон `dictionary_code`, длины, состав `fields`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
@@ -74,7 +73,7 @@ POST **/admin/dictionaries**
         + Статус: `409`
 2. Начать транзакцию.
 3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`.
-4. Вставить `dictionary_version`: `version_id = 1`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`.
+4. Вставить `dictionary_version`: `version_id = 1`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`. Колонке `code = name` записать `default = true`, остальным `default = false`.
 5. Создать секцию `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`.
     + Ошибка выполнения:
         + Код: `script_failed`
