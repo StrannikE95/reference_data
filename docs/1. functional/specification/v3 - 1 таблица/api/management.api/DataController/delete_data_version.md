@@ -14,7 +14,7 @@ DELETE **/admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}**
 + `data_version_id`:
     + path
     + Обязательно
-    + Целое от 1
+    + uuid
 
 Тела нет.
 

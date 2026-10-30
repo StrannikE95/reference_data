@@ -9,7 +9,6 @@
 ```mermaid
 erDiagram
     DICTIONARY ||--o{ SCHEME_VERSION : schema
-    DICTIONARY ||--o{ DATA_VERSION : data
     SCHEME_VERSION ||--o{ DATA_VERSION : describes
     DATA_VERSION ||--o{ DICTIONARY_ROW : stores
 
@@ -22,8 +21,8 @@ erDiagram
     }
 
     SCHEME_VERSION {
-        uuid dictionary_id PK
-        integer scheme_version_id PK
+        uuid scheme_version_id PK
+        uuid dictionary_id FK
         varchar status
         timestamptz valid_from
         timestamptz valid_to
@@ -31,9 +30,8 @@ erDiagram
     }
 
     DATA_VERSION {
-        integer data_version_id PK
-        uuid dictionary_id PK
-        integer schema_version_id FK
+        uuid data_version_id PK
+        uuid schema_version_id FK
         varchar status
         varchar type
         timestamptz published_at
@@ -42,9 +40,9 @@ erDiagram
     DICTIONARY_ROW {
         varchar dictionary_code PK
         varchar value_code PK
-        integer data_version_id PK
+        uuid data_version_id PK
         varchar status
-        timestamptz valid_from PK
+        timestamptz valid_from
         timestamptz valid_to
         jsonb data
     }
@@ -73,8 +71,8 @@ erDiagram
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| dictionary_id | uuid | PK, FK -> dictionary.dictionary_id | Паспорт |
-| scheme_version_id | integer | PK | Номер версии справочника, с 1 |
+| scheme_version_id | uuid | PK | Идентификатор версии схемы |
+| dictionary_id | uuid | NOT NULL, FK -> dictionary.dictionary_id | Паспорт |
 | status | varchar(16) | NOT NULL | `draft`, `active` или `closed` |
 | valid_from | timestamptz | NULL | Начало действия схемы. Пусто у черновика |
 | valid_to | timestamptz | NULL | Конец схемы, исключительно. Пусто у `draft` и `active` |
@@ -82,7 +80,7 @@ erDiagram
 
 Индексы и ограничения:
 
-+ первичный ключ `(dictionary_id, scheme_version_id)`
++ первичный ключ `scheme_version_id`
 + `scheme_version_status_check`: `draft`, `active`, `closed`
 
 Правила работы:
@@ -95,20 +93,19 @@ erDiagram
 
 ## Таблица `data_version`
 
-Публикация значений. Ссылается на схему, в которой записаны её строки. У одной схемы таких публикаций несколько. Период элемента лежит на строке, не на этом заголовке.
+Публикация значений. Ссылается на схему, в которой записаны её строки. Справочник версии данных — справочник этой схемы. У одной схемы таких публикаций несколько. Период элемента лежит на строке, не на этом заголовке.
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
-| dictionary_id | uuid | PK, FK -> dictionary.dictionary_id | Паспорт |
-| data_version_id | integer | PK | Номер версии данных справочника, с 1 |
-| schema_version_id | integer | NOT NULL, FK -> scheme_version (dictionary_id, scheme_version_id) | Схема этой публикации |
+| data_version_id | uuid | PK | Идентификатор версии данных |
+| schema_version_id | uuid | NOT NULL, FK -> scheme_version.scheme_version_id | Схема этой публикации |
 | status | varchar(16) | NOT NULL | `draft` или `published` |
 | type | varchar(8) | NOT NULL | `delta` — только изменённые строки. `full` — новый набор: при публикации закрываются все открытые строки |
 | published_at | timestamptz | NULL | Момент публикации. Пусто у черновика |
 
 Индексы и ограничения:
 
-+ первичный ключ `(dictionary_id, data_version_id)`
++ первичный ключ `data_version_id`
 + `data_version_status_check`: `draft` или `published`
 + `data_version_type_check`: `delta` или `full`
 
@@ -128,15 +125,15 @@ erDiagram
 | --- | --- | --- | --- |
 | dictionary_code | varchar(63) | NOT NULL, входит в PK | Код справочника и ключ секции |
 | value_code | varchar(64) | NOT NULL, входит в PK | Код значения |
-| data_version_id | integer | NOT NULL, входит в PK | Версия данных, в которой строку записали |
+| data_version_id | uuid | NOT NULL, входит в PK | Версия данных, в которой строку записали |
 | status | varchar(16) | NOT NULL | `draft` — ещё не опубликована, `published` — входит в периоды |
-| valid_from | timestamptz | NOT NULL, входит в PK | Начало состояния, включительно |
+| valid_from | timestamptz | NOT NULL | Начало состояния, включительно |
 | valid_to | timestamptz | NULL | Конец состояния, исключительно. Пусто у открытого опубликованного состояния |
 | data | jsonb | NOT NULL | Поля значения. Ключ — `code` колонки в версии `scheme_version_id` |
 
 Индексы и ограничения:
 
-+ первичный ключ `(dictionary_code, value_code, data_version_id, valid_from)`
++ первичный ключ `(dictionary_code, value_code, data_version_id)`
 + `ix_dictionary_row_code` на `(dictionary_code, value_code, valid_from)`
 + секция `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`
 + `dictionary_row_status_check`: `draft` или `published`
@@ -151,6 +148,5 @@ erDiagram
 ## Связи между таблицами
 
 + `dictionary 1 -> N scheme_version`
-+ `dictionary 1 -> N data_version`
 + `scheme_version 1 -> N data_version`
 + `data_version 1 -> N dictionary_row` по `data_version_id` внутри секции `dictionary_code`, без внешнего ключа

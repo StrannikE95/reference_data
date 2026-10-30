@@ -18,7 +18,7 @@ POST **/admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}/pub
 + `data_version_id`:
     + path
     + Обязательно
-    + Целое от 1
+    + uuid
 + `type`:
     + path
     + Обязательно

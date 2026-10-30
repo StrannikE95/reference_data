@@ -52,7 +52,7 @@ POST **/admin/dictionaries**
 + `dictionary_name`
 + `owner`
 + `status` = `active`
-+ `scheme_version_id` = `1`
++ `scheme_version_id`
 + `version_status` = `draft`
 + `scheme` — с назначенными `field_id`. У колонки `code = name` в ответе `default = true`, у остальных `false`
 
@@ -73,7 +73,7 @@ POST **/admin/dictionaries**
         + Статус: `409`
 2. Начать транзакцию.
 3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`.
-4. Вставить `scheme_version`: `scheme_version_id = 1`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`. Колонке `code = name` записать `default = true`, остальным `default = false`. Версию данных не создавать.
+4. Вставить `scheme_version`: новый `scheme_version_id`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`. Колонке `code = name` записать `default = true`, остальным `default = false`. Версию данных не создавать.
 5. Создать секцию `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`.
     + Ошибка выполнения:
         + Код: `script_failed`

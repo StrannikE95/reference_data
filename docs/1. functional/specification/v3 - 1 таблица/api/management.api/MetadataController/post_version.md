@@ -50,7 +50,7 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
 2. Версии `active` нет:
     + Код: `no_active_version`
     + Статус: `404`
-3. Вставить следующую версию схемы: `scheme_version_id` на 1 больше максимального, `status = draft`, `valid_from` и `valid_to` пустые, `scheme` — схема активной версии, с теми же `field_id`. Версию данных и строки `dictionary_row` не создавать.
+3. Вставить версию схемы: новый `scheme_version_id`, `status = draft`, `valid_from` и `valid_to` пустые, `scheme` — схема активной версии, с теми же `field_id`. Версию данных и строки `dictionary_row` не создавать.
 4. Вернуть статус `201`.
 
 ```mermaid

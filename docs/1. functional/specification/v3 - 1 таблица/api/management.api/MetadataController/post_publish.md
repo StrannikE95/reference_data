@@ -14,7 +14,7 @@ POST **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}/publis
 + `scheme_version_id`:
     + path
     + Обязательно
-    + Целое от 1
+    + uuid
 
 Тела нет.
 
