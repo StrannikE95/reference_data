@@ -26,6 +26,7 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
     + `code`
     + `name`
     + `type`
+    + `dictionary_code` — у колонки `reference`
     + `default`
     + `required`
 

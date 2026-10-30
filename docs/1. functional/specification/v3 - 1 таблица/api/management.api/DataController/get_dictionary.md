@@ -31,6 +31,7 @@ GET **/admin/dictionaries/{dictionary_code}**
         + `code`
         + `name`
         + `type`
+        + `dictionary_code` — у колонки `reference`
         + `default` — `true` только у колонки `code = name`
         + `required` — у колонки `code = name` всегда `true`
 + `data_draft` — нет черновика данных, поля нет

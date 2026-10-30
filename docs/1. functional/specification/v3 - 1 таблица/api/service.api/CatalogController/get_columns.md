@@ -26,6 +26,7 @@ GET **/dictionaries/{dictionary_code}/columns**
     + `code`
     + `name`
     + `type`
+    + `dictionary_code` — у колонки `reference`, код справочника ссылки
     + `default` — `true` только у колонки `code = name`
     + `required` — `true`, если значение этой колонки у элемента обязательно. У `name` всегда `true`
 

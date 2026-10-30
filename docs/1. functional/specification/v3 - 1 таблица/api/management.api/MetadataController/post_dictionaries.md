@@ -38,8 +38,12 @@ POST **/admin/dictionaries**
 + `scheme[].type`:
     + Обязательно
     + `string`, `integer`, `number`, `boolean`, `reference`
-    + `reference` — ссылка на элемент справочника: в значении объекта два поля, `dictionary_code` и `value_code`
+    + `reference` — ссылка на элемент справочника. Код справочника задаёт `dictionary_code` этой колонки. В значении строки — код записи
     + У колонки `code = name` только `string`
++ `scheme[].dictionary_code`:
+    + Обязательно при `type = reference`
+    + `^[a-z][a-z0-9_]{0,62}$`
+    + У колонки другого типа этого поля нет
 + `scheme[].required`:
     + Обязательно
     + `true` — у элемента справочника значение этой колонки должно быть заполнено
@@ -61,7 +65,7 @@ POST **/admin/dictionaries**
 
 ## Валидация
 
-1. Проверить тело: шаблон `dictionary_code`, длины, состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
+1. Проверить тело: шаблон `dictionary_code`, длины, состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, у `reference` есть `dictionary_code` по шаблону кода справочника, у остальных типов этого поля нет, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
