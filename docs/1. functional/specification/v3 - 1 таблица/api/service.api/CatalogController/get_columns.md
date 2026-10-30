@@ -50,7 +50,7 @@ GET **/dictionaries/{dictionary_code}/columns**
     + иначе версия `active`. Её нет:
         + Код: `no_active_version`
         + Статус: `404`
-4. Вернуть `fields` этой версии как `columns`, без `field_id`. Статус `200`.
+4. Из `scheme` этой версии вернуть колонки как `columns`, без `field_id`. Статус `200`.
 
 ```mermaid
 flowchart TD

@@ -1,15 +1,17 @@
 # Схема БД для API справочников
 
-Пустая база поднимается скриптом [init.sql](db/init.sql): паспорт `dictionary`, версии `dictionary_version` и секционированная таблица `dictionary_row`. Секция справочника в скрипт не входит: её создаёт паспорт.
+Пустая база поднимается скриптом [init.sql](db/init.sql): паспорт `dictionary`, версии схемы `scheme_version`, версии данных `data_version` и секционированная таблица `dictionary_row`. Секция справочника в скрипт не входит: её создаёт паспорт.
 
-Все справочники хранят значения в `dictionary_row`. Состав колонок лежит в версии. У справочника одновременно не больше одной версии `draft` и одной `active`. История значения — соседняя опубликованная строка с другим периодом, а не копия всего справочника.
+Все справочники хранят значения в `dictionary_row`. Полная схема лежит в `scheme` версии схемы. Строка помнит версию данных, а версия данных — схему, в которой её записали. Правка значений открывает новую версию данных и не открывает новую схему. У справочника одновременно не больше одной схемы `draft` и одной `active`, и не больше одной версии данных `draft`. История значения — соседняя опубликованная строка с другим периодом, а не копия всего справочника.
 
 ## ER-диаграмма
 
 ```mermaid
 erDiagram
-    DICTIONARY ||--o{ DICTIONARY_VERSION : has
-    DICTIONARY_VERSION ||--o{ DICTIONARY_ROW : stores
+    DICTIONARY ||--o{ SCHEME_VERSION : schema
+    DICTIONARY ||--o{ DATA_VERSION : data
+    SCHEME_VERSION ||--o{ DATA_VERSION : describes
+    DATA_VERSION ||--o{ DICTIONARY_ROW : stores
 
     DICTIONARY {
         uuid dictionary_id PK
@@ -19,20 +21,29 @@ erDiagram
         varchar status
     }
 
-    DICTIONARY_VERSION {
+    SCHEME_VERSION {
         uuid dictionary_id PK
-        integer version_id PK
+        integer scheme_version_id PK
         varchar status
         timestamptz valid_from
         timestamptz valid_to
-        jsonb fields
+        jsonb scheme
+    }
+
+    DATA_VERSION {
+        integer data_version_id PK
+        uuid dictionary_id PK
+        integer schema_version_id FK
+        varchar status
+        varchar type
+        timestamptz published_at
     }
 
     DICTIONARY_ROW {
         varchar dictionary_code PK
         varchar value_code PK
-        integer version_id PK
-        varchar row_status
+        integer data_version_id PK
+        varchar status
         timestamptz valid_from PK
         timestamptz valid_to
         jsonb data
@@ -41,7 +52,7 @@ erDiagram
 
 ## Таблица `dictionary`
 
-Реестр справочников. Хранит код, название, владельца и признак деактивации. Состав колонок хранит версия.
+Реестр справочников. Хранит код, название, владельца и признак деактивации. Схему хранит `scheme` версии схемы.
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
@@ -56,30 +67,58 @@ erDiagram
 + `ux_dictionary_code` на `lower(dictionary_code)`
 + `dictionary_status_check`: `status` только `active` или `inactive`
 
-## Таблица `dictionary_version`
+## Таблица `scheme_version`
 
-Версия состава колонок. Период схемы — `valid_from` включительно и `valid_to` исключительно. У черновика оба поля пусты.
+Версия схемы. Период схемы — `valid_from` включительно и `valid_to` исключительно. У черновика оба поля пусты.
 
 | Поле | Тип | Ограничения | Назначение |
 | --- | --- | --- | --- |
 | dictionary_id | uuid | PK, FK -> dictionary.dictionary_id | Паспорт |
-| version_id | integer | PK | Номер версии справочника, с 1 |
+| scheme_version_id | integer | PK | Номер версии справочника, с 1 |
 | status | varchar(16) | NOT NULL | `draft`, `active` или `closed` |
 | valid_from | timestamptz | NULL | Начало действия схемы. Пусто у черновика |
 | valid_to | timestamptz | NULL | Конец схемы, исключительно. Пусто у `draft` и `active` |
-| fields | jsonb | NOT NULL | Колонки этой версии: `field_id`, `code`, `name`, `type`, `default`, `required` |
+| scheme | jsonb | NOT NULL | Полная схема этой версии. Для каждой колонки: `field_id`, код (`code`), наименование (`name`), тип (`type`), обязательность (`required`), признак по умолчанию (`default`) |
 
 Индексы и ограничения:
 
-+ первичный ключ `(dictionary_id, version_id)`
-+ `dictionary_version_status_check`: `draft`, `active`, `closed`
++ первичный ключ `(dictionary_id, scheme_version_id)`
++ `scheme_version_status_check`: `draft`, `active`, `closed`
 
 Правила работы:
 
 + у справочника не больше одной версии `draft` и одной `active`
 + одна и та же колонка в разных версиях хранит один `field_id`. Новый `field_id` — новая колонка. Тот же `field_id` и другой `code` — переименование. Тот же `field_id` и другой `type` — смена типа. `field_id` нет в новой версии — колонка удалена
-+ в `fields` каждой версии есть колонка `code = name`. У неё `type = string`, `required = true`, `"default": true`. Другой колонки с `"default": true` нет. Её `field_id` не меняется, колонка не удаляется, `code`, `type` и `required` не меняются. Меняется только подпись
++ в `scheme` каждой версии есть колонка `code = name`. У неё `type = string`, `required = true`, `"default": true`. Другой колонки с `"default": true` нет. Её `field_id` не меняется, колонка не удаляется, `code`, `type` и `required` не меняются. Меняется только подпись
 + `type` — одно из `string`, `integer`, `number`, `boolean`
++ новая строка схемы появляется при создании справочника и при открытии черновика схемы. Запись значения схему не создаёт
+
+## Таблица `data_version`
+
+Публикация значений. Ссылается на схему, в которой записаны её строки. У одной схемы таких публикаций несколько. Период элемента лежит на строке, не на этом заголовке.
+
+| Поле | Тип | Ограничения | Назначение |
+| --- | --- | --- | --- |
+| dictionary_id | uuid | PK, FK -> dictionary.dictionary_id | Паспорт |
+| data_version_id | integer | PK | Номер версии данных справочника, с 1 |
+| schema_version_id | integer | NOT NULL, FK -> scheme_version (dictionary_id, scheme_version_id) | Схема этой публикации |
+| status | varchar(16) | NOT NULL | `draft` или `published` |
+| type | varchar(8) | NOT NULL | `delta` — только изменённые строки. `full` — новый набор: при публикации закрываются все открытые строки |
+| published_at | timestamptz | NULL | Момент публикации. Пусто у черновика |
+
+Индексы и ограничения:
+
++ первичный ключ `(dictionary_id, data_version_id)`
++ `data_version_status_check`: `draft` или `published`
++ `data_version_type_check`: `delta` или `full`
+
+Правила работы:
+
++ у справочника не больше одной версии данных `draft`
++ `delta` ссылается на активную схему, если черновика схемы нет. Иначе — на черновик схемы
++ `full` выбирают при публикации. Смена состава или установка обязательности тоже открывает `full` на черновик схемы. Пока активной схемы нет, первая запись значений открывает `full`
++ публикация `delta` закрывает открытую строку только у кода, для которого есть черновая строка, моментом `valid_from` черновой строки. Этот момент строго позже начала открытой строки. Схему публикация не закрывает
++ публикация `full` закрывает каждую ранее открытую строку справочника моментом запроса и открывает строки этой версии. Схему может не менять: так же позже пойдёт загрузка файла. Разбор файла в этой редакции не описан
 
 ## Таблица `dictionary_row`
 
@@ -89,15 +128,15 @@ erDiagram
 | --- | --- | --- | --- |
 | dictionary_code | varchar(63) | NOT NULL, входит в PK | Код справочника и ключ секции |
 | value_code | varchar(64) | NOT NULL, входит в PK | Код значения |
-| version_id | integer | NOT NULL, входит в PK | Версия, в которой строку записали |
-| row_status | varchar(16) | NOT NULL | `draft` — ещё не опубликована, `published` — входит в периоды |
+| data_version_id | integer | NOT NULL, входит в PK | Версия данных, в которой строку записали |
+| status | varchar(16) | NOT NULL | `draft` — ещё не опубликована, `published` — входит в периоды |
 | valid_from | timestamptz | NOT NULL, входит в PK | Начало состояния, включительно |
 | valid_to | timestamptz | NULL | Конец состояния, исключительно. Пусто у открытого опубликованного состояния |
-| data | jsonb | NOT NULL | Поля значения. Ключ — `code` колонки в версии `version_id` |
+| data | jsonb | NOT NULL | Поля значения. Ключ — `code` колонки в версии `scheme_version_id` |
 
 Индексы и ограничения:
 
-+ первичный ключ `(dictionary_code, value_code, version_id, valid_from)`
++ первичный ключ `(dictionary_code, value_code, data_version_id, valid_from)`
 + `ix_dictionary_row_code` на `(dictionary_code, value_code, valid_from)`
 + секция `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`
 + `dictionary_row_status_check`: `draft` или `published`
@@ -106,9 +145,12 @@ erDiagram
 Правила работы:
 
 + у одного `value_code` одна строка `draft` и одна опубликованная строка с пустым `valid_to`
-+ у черновой строки `valid_from` заполнен и строго позже `valid_from` открытой строки того же кода, если такая строка есть. Пока черновик не опубликован, эта дата открытую строку не закрывает. При публикации строка сохраняет свой `valid_from`, и этим моментом закрывается прежняя открытая строка
++ у черновой строки `valid_from` заполнен. Пока версия данных не опубликована, эта дата открытую строку не закрывает
++ ключ в `data` — `code` колонки схемы, на которую ссылается версия данных. Чтение находит значение по `field_id`
 
 ## Связи между таблицами
 
-+ `dictionary 1 -> N dictionary_version`
-+ `dictionary_version 1 -> N dictionary_row` по `version_id` внутри секции `dictionary_code`, без внешнего ключа
++ `dictionary 1 -> N scheme_version`
++ `dictionary 1 -> N data_version`
++ `scheme_version 1 -> N data_version`
++ `data_version 1 -> N dictionary_row` по `data_version_id` внутри секции `dictionary_code`, без внешнего ключа

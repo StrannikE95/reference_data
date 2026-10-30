@@ -3,7 +3,7 @@
 # Описание
 
 POST **/admin/dictionaries/{dictionary_code}/versions**
-Открыть следующую версию со статусом `draft`, чтобы менять атрибуты действующего справочника. Колонки копируются из активной версии. Для записи значений элементов этот метод не используется. Если черновик уже есть, второй не создаётся.
+Открыть следующую версию схемы со статусом `draft`, чтобы менять схему действующего справочника. `scheme` копируется из активной версии. Строки и версия данных не создаются. Запись значения этот метод не заменяет. Если черновик схемы уже есть, второй не создаётся.
 
 # Входные параметры
 
@@ -17,11 +17,11 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
 # Поля ответа
 
 + `dictionary_code`
-+ `version_id`
++ `scheme_version_id`
 + `status` = `draft`
 + `valid_from` — пусто
 + `valid_to` — пусто
-+ `fields` — копия колонок активной версии:
++ `scheme` — копия схемы активной версии:
     + `field_id`
     + `code`
     + `name`
@@ -50,7 +50,7 @@ POST **/admin/dictionaries/{dictionary_code}/versions**
 2. Версии `active` нет:
     + Код: `no_active_version`
     + Статус: `404`
-3. Вставить следующую версию: `version_id` на 1 больше максимального, `status = draft`, `valid_from` и `valid_to` пустые, `fields` — те же колонки, что у активной версии, с теми же `field_id`. Строки `dictionary_row` не создавать.
+3. Вставить следующую версию схемы: `scheme_version_id` на 1 больше максимального, `status = draft`, `valid_from` и `valid_to` пустые, `scheme` — схема активной версии, с теми же `field_id`. Версию данных и строки `dictionary_row` не создавать.
 4. Вернуть статус `201`.
 
 ```mermaid
@@ -58,8 +58,8 @@ flowchart TD
   hasDraft{"Черновик уже есть"} -->|да| dup["409 draft_already_exists"]
   hasDraft -->|нет| hasActive{"Есть active"}
   hasActive -->|нет| noAct["404 no_active_version"]
-  hasActive -->|да| ins["INSERT версия draft, копия fields"]
+  hasActive -->|да| ins["INSERT версия draft, копия scheme"]
   ins --> ok["201"]
 ```
 
-Первый черновик справочника создаёт [post_dictionaries.md](post_dictionaries.md), а не этот метод. Колонки черновика меняются в [patch_version.md](patch_version.md). Копия содержит колонку `name`: `type = string`, `required = true`, `default = true`. Активная версия и опубликованные строки остаются. Пока черновик открыт, запись состояний идёт в него и эти строки не закрывает. Деактивированный справочник черновик открыть может.
+Первый черновик схемы создаёт [post_dictionaries.md](post_dictionaries.md), а не этот метод. Колонки черновика меняются в [patch_version.md](patch_version.md). Копия содержит колонку `name`: `type = string`, `required = true`, `default = true`. Активная схема и опубликованные строки остаются. Запись значения открывает версию данных в [post_row.md](../DataController/post_row.md) и эту схему не закрывает. Полный набор данных включается только сменой состава или установкой обязательности. Деактивированный справочник черновик схемы открыть может.

@@ -22,24 +22,24 @@ POST **/admin/dictionaries**
     + Не обязательно
     + До 200 символов
     + Не передан — в паспорте `NULL`
-+ `fields`:
++ `scheme`:
     + body
     + Обязательно
     + От 1 до 50 колонок
     + Ровно одна колонка с `code = name`: `type = string`, `required = true`. Это атрибут по умолчанию, клиент его не назначает
     + Одинаковые `code` нельзя
-+ `fields[].code`:
++ `scheme[].code`:
     + Обязательно
     + `^[a-z][a-z0-9_]{0,62}$`
     + Не `value_code`, `valid_from`, `valid_to`
-+ `fields[].name`:
++ `scheme[].name`:
     + Обязательно
     + От 1 до 200 символов
-+ `fields[].type`:
++ `scheme[].type`:
     + Обязательно
     + `string`, `integer`, `number`, `boolean`
     + У колонки `code = name` только `string`
-+ `fields[].required`:
++ `scheme[].required`:
     + Обязательно
     + `true` — у элемента справочника значение этой колонки должно быть заполнено
     + `false` — значение можно не передавать или передать пустым
@@ -52,15 +52,15 @@ POST **/admin/dictionaries**
 + `dictionary_name`
 + `owner`
 + `status` = `active`
-+ `version_id` = `1`
++ `scheme_version_id` = `1`
 + `version_status` = `draft`
-+ `fields` — с назначенными `field_id`. У колонки `code = name` в ответе `default = true`, у остальных `false`. У колонки `name` `default = true`, у остальных `false`
++ `scheme` — с назначенными `field_id`. У колонки `code = name` в ответе `default = true`, у остальных `false`
 
 # Алгоритм работы
 
 ## Валидация
 
-1. Проверить тело: шаблон `dictionary_code`, длины, состав `fields`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
+1. Проверить тело: шаблон `dictionary_code`, длины, состав `scheme`, шаблон `code`, запрещённые имена, уникальность `code`, ровно одна колонка `code = name` с `type = string` и `required = true`, у каждой колонки `required` равен `true` или `false`, не больше 50 колонок, неизвестных полей нет. Поля `default` во входе нет.
     + Нарушение:
         + Код: `invalid_request`
         + Статус: `400`
@@ -73,7 +73,7 @@ POST **/admin/dictionaries**
         + Статус: `409`
 2. Начать транзакцию.
 3. Вставить строку в `dictionary`: новый `dictionary_id`, `status = active`.
-4. Вставить `dictionary_version`: `version_id = 1`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`. Колонке `code = name` записать `default = true`, остальным `default = false`.
+4. Вставить `scheme_version`: `scheme_version_id = 1`, `status = draft`, `valid_from` и `valid_to` пустые. Каждой колонке назначить `field_id`. Колонке `code = name` записать `default = true`, остальным `default = false`. Версию данных не создавать.
 5. Создать секцию `dictionary_row_{dictionary_code}` для `FOR VALUES IN (dictionary_code)`.
     + Ошибка выполнения:
         + Код: `script_failed`

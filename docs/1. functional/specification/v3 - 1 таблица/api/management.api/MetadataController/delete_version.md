@@ -2,8 +2,8 @@
 
 # Описание
 
-DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
-Удалить черновик и его черновые строки. Активная версия и опубликованные строки остаются. Единственный черновик при отсутствии активной версии не удаляется.
+DELETE **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}**
+Удалить черновик схемы. Если черновик данных ссылается на него, удалить и эту версию данных с её черновыми строками. Активная схема, опубликованные строки и черновик данных активной схемы остаются. Единственный черновик схемы при отсутствии активной схемы не удаляется.
 
 # Входные параметры
 
@@ -11,7 +11,7 @@ DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + path
     + Обязательно
     + `^[a-z][a-z0-9_]{0,62}$`
-+ `version_id`:
++ `scheme_version_id`:
     + path
     + Обязательно
     + Целое от 1
@@ -21,7 +21,7 @@ DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 # Поля ответа
 
 + `dictionary_code`
-+ `version_id`
++ `scheme_version_id`
 
 # Алгоритм работы
 
@@ -35,7 +35,7 @@ DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
     + Нет:
         + Код: `dictionary_not_found`
         + Статус: `404`
-3. Найти версию с этим `version_id`.
+3. Найти версию с этим `scheme_version_id`.
     + Нет:
         + Код: `version_not_found`
         + Статус: `404`
@@ -48,7 +48,7 @@ DELETE **/admin/dictionaries/{dictionary_code}/versions/{version_id}**
 2. Версии `active` нет:
     + Код: `only_draft`
     + Статус: `409`
-3. Удалить строки `dictionary_row` с этим `version_id` и `row_status = draft`. Удалить строку `dictionary_version`. Опубликованные строки и версию `active` не менять.
+3. Если черновик данных ссылается на эту схему, удалить его черновые строки и строку `data_version`. Удалить строку `scheme_version`. Опубликованные строки и схему `active` не менять.
 4. Вернуть статус `200`.
 
 ```mermaid
