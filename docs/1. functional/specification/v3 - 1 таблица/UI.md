@@ -72,10 +72,10 @@
 - «Назад» — показать предыдущую страницу, если она есть.
 - «Вперед» — показать следующую страницу, если она есть.
 
-### Экран «Паспорт»
+### Экран «Структура справочника»
 
 <div class="screen">
-  <h1>Паспорт</h1>
+  <h1>Структура справочника</h1>
   <div class="head">
     <div>Черновик</div>
     <div>Версия 2: черновик. Активна версия 1 с 01.01.2024 00:00</div>
@@ -176,14 +176,14 @@
   </div>
   <label style="display:inline-block">Версия
     <select>
-      <option>Только открытые</option>
-      <option>Черновик</option>
-      <option>На момент</option>
+      <option>Active</option>
+      <option>Draft</option>
+      <option>History</option>
     </select>
   </label>
-  <label style="display:inline-block">Дата <input type="datetime-local"></label>
-  <label style="display:inline-block">Код <input value="BRICK"></label>
+  <label style="display:inline-block">Дата <input type="datetime-local" disabled></label>
   <button>Показать</button>
+  <label>Код <input value="BRICK"></label>
   <table>
     <thead>
       <tr>
@@ -245,6 +245,7 @@
   <div class="empty">Открытых состояний нет</div>
 </div>
 
+- «Дата» недоступна, когда в «Версия» выбрано «Только открытые» или «Черновик». При «На момент» дата вводится.
 - «Показать» — оставить строки по версии, дате и коду. «Черновик» показывает ещё не опубликованные строки. После публикации эта версия сообщает, что черновика нет, и не показывает открытые строки. Пустой код показывает все коды страницы.
 - «Назад» — показать предыдущую страницу, если она есть.
 - «Вперед» — показать следующую страницу, если она есть.
