@@ -23,6 +23,7 @@
 - Справочник описывается полями «Код», «Название» и «Владелец».
 - Код после создания не редактируется.
 - Колонка задаётся кодом, названием, типом и признаком «Обязательное». Атрибут `name` есть всегда: код `name`, тип `string`, признак «Обязательное» включён. Его нельзя удалить и нельзя сменить ему код, тип и обязательность. Название этой колонки меняется. Атрибут `name` — атрибут по умолчанию, отдельного выбора нет. У необязательной колонки значение элемента можно оставить пустым.
+- Тип колонки — `string`, `integer`, `number`, `boolean` или `reference`. `reference` — ссылка на элемент справочника. В ячейке два значения: код справочника и код записи.
 - Состояния на экранах показываются как `ДД.ММ.ГГГГ ЧЧ:ММ`.
 - Открытое состояние в колонке «Конец» показывает «—».
 - Ошибка показывается текстом сообщения.
@@ -121,6 +122,12 @@
         <td>Плотность</td>
         <td>нет</td>
       </tr>
+      <tr>
+        <td>reference</td>
+        <td>analog</td>
+        <td>Аналог</td>
+        <td>нет</td>
+      </tr>
     </tbody>
   </table>
 
@@ -185,6 +192,21 @@
         <td><button>Удалить</button></td>
       </tr>
       <tr>
+        <td>
+          <select>
+            <option>string</option>
+            <option>integer</option>
+            <option>number</option>
+            <option>boolean</option>
+            <option selected>reference</option>
+          </select>
+        </td>
+        <td><input value="analog"></td>
+        <td><input value="Аналог"></td>
+        <td><input type="checkbox"></td>
+        <td><button>Удалить</button></td>
+      </tr>
+      <tr>
         <td></td>
         <td></td>
         <td></td>
@@ -215,6 +237,7 @@
         <th>Вид</th>
         <th>Несущая</th>
         <th>Плотность</th>
+        <th>Аналог</th>
         <th>Действие</th>
       </tr>
     </thead>
@@ -230,6 +253,10 @@
           </select>
         </td>
         <td><input value="1800"></td>
+        <td>
+          <label>Код справочника <input value="wall_kind"></label>
+          <label>Код записи <input value="STONE"></label>
+        </td>
         <td><button>Удалить</button></td>
       </tr>
       <tr>
@@ -243,9 +270,14 @@
           </select>
         </td>
         <td><input value=""></td>
+        <td>
+          <label>Код справочника <input value=""></label>
+          <label>Код записи <input value=""></label>
+        </td>
         <td><button>Удалить</button></td>
       </tr>
       <tr>
+        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -300,6 +332,7 @@
         <th>Вид</th>
         <th>Несущая</th>
         <th>Плотность</th>
+        <th>Аналог</th>
         <th>Начало</th>
         <th>Конец</th>
       </tr>
@@ -311,6 +344,7 @@
         <td>STONE</td>
         <td>да</td>
         <td>1800</td>
+        <td>Код справочника: wall_kind<br>Код записи: STONE</td>
         <td>20.10.2026 00:00</td>
         <td>—</td>
       </tr>
@@ -320,6 +354,7 @@
         <td>WOOD</td>
         <td>нет</td>
         <td>500</td>
+        <td>Код справочника: wall_kind<br>Код записи: WOOD</td>
         <td>01.01.2024 00:00</td>
         <td>—</td>
       </tr>
@@ -329,6 +364,7 @@
         <td>METAL</td>
         <td>да</td>
         <td>7850</td>
+        <td>Код справочника: wall_kind<br>Код записи: METAL</td>
         <td>20.10.2026 00:00</td>
         <td>—</td>
       </tr>
@@ -358,6 +394,7 @@
         <th>Вид</th>
         <th>Несущая</th>
         <th>Плотность</th>
+        <th>Аналог</th>
         <th>Действие</th>
       </tr>
     </thead>
@@ -373,6 +410,10 @@
           </select>
         </td>
         <td><input value="1800"></td>
+        <td>
+          <label>Код справочника <input value="wall_kind"></label>
+          <label>Код записи <input value="STONE"></label>
+        </td>
         <td><button>Удалить</button></td>
       </tr>
       <tr>
@@ -386,9 +427,14 @@
           </select>
         </td>
         <td><input value=""></td>
+        <td>
+          <label>Код справочника <input value=""></label>
+          <label>Код записи <input value=""></label>
+        </td>
         <td><button>Удалить</button></td>
       </tr>
       <tr>
+        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -426,6 +472,7 @@
         <th>Вид</th>
         <th>Несущая</th>
         <th>Плотность</th>
+        <th>Аналог</th>
         <th>Начало</th>
         <th>Конец</th>
       </tr>
@@ -437,6 +484,7 @@
         <td>STONE</td>
         <td>да</td>
         <td>1800</td>
+        <td>Код справочника: wall_kind<br>Код записи: STONE</td>
         <td>01.01.2024 00:00</td>
         <td>20.10.2026 00:00</td>
       </tr>

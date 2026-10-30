@@ -88,7 +88,7 @@ erDiagram
 + у справочника не больше одной версии `draft` и одной `active`
 + одна и та же колонка в разных версиях хранит один `field_id`. Новый `field_id` — новая колонка. Тот же `field_id` и другой `code` — переименование. Тот же `field_id` и другой `type` — смена типа. `field_id` нет в новой версии — колонка удалена
 + в `scheme` каждой версии есть колонка `code = name`. У неё `type = string`, `required = true`, `"default": true`. Другой колонки с `"default": true` нет. Её `field_id` не меняется, колонка не удаляется, `code`, `type` и `required` не меняются. Меняется только подпись
-+ `type` — одно из `string`, `integer`, `number`, `boolean`
++ `type` — одно из `string`, `integer`, `number`, `boolean`, `reference`. `reference` — ссылка на элемент справочника. В `data` это объект из двух полей: `dictionary_code` — код справочника, `^[a-z][a-z0-9_]{0,62}$`, и `value_code` — код записи, `^[A-Za-z0-9_]{1,64}$`
 + новая строка схемы появляется при создании справочника и при открытии черновика схемы. Запись значения схему не создаёт
 
 ## Таблица `data_version`
@@ -129,7 +129,7 @@ erDiagram
 | status | varchar(16) | NOT NULL | `draft` — ещё не опубликована, `published` — входит в периоды |
 | valid_from | timestamptz | NOT NULL | Начало состояния, включительно |
 | valid_to | timestamptz | NULL | Конец состояния, исключительно. Пусто у открытого опубликованного состояния |
-| data | jsonb | NOT NULL | Поля значения. Ключ — `code` колонки в версии `scheme_version_id` |
+| data | jsonb | NOT NULL | Поля значения. Ключ — `code` колонки в версии `scheme_version_id`. У колонки `reference` значение — объект `dictionary_code` и `value_code` |
 
 Индексы и ограничения:
 

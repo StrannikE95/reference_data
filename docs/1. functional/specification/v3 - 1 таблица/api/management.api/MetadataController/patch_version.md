@@ -34,7 +34,8 @@ PATCH **/admin/dictionaries/{dictionary_code}/versions/{scheme_version_id}**
     + От 1 до 200 символов
 + `scheme[].type`:
     + Обязательно
-    + `string`, `integer`, `number`, `boolean`
+    + `string`, `integer`, `number`, `boolean`, `reference`
+    + `reference` — ссылка на элемент справочника: в значении объекта два поля, `dictionary_code` и `value_code`
     + У колонки `code = name` только `string`
 + `scheme[].required`:
     + Обязательно
