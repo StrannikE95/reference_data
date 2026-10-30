@@ -12,7 +12,9 @@
 | admin | DataController | `GET /admin/dictionaries` | [Список справочников](api/management.api/DataController/get_dictionaries.md) |
 | admin | DataController | `GET /admin/dictionaries/{dictionary_code}` | [Паспорт и поля](api/management.api/DataController/get_dictionary.md) |
 | admin | DataController | `GET /admin/dictionaries/{dictionary_code}/rows` | [Состояния значений](api/management.api/DataController/get_rows.md) |
+| admin | DataController | `GET /admin/dictionaries/{dictionary_code}/rows/csv` | [Выгрузить строки в csv](api/management.api/DataController/get_rows_csv.md) |
 | admin | DataController | `POST /admin/dictionaries/{dictionary_code}/rows` | [Записать новое состояние](api/management.api/DataController/post_row.md) |
+| admin | DataController | `POST /admin/dictionaries/{dictionary_code}/rows/csv` | [Загрузить строки из csv](api/management.api/DataController/post_rows_csv.md) |
 | admin | DataController | `POST /admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}/publish/{type}` | [Опубликовать значения](api/management.api/DataController/post_data_publish.md) |
 | admin | DataController | `DELETE /admin/dictionaries/{dictionary_code}/data-versions/{data_version_id}` | [Удалить черновик значений](api/management.api/DataController/delete_data_version.md) |
 | service | CatalogController | `GET /dictionaries` | [Активные справочники](api/service.api/CatalogController/get_dictionaries.md) |
@@ -35,7 +37,8 @@
 |409|`only_draft`|Нельзя удалить черновик, пока нет активной версии|-|
 |409|`schema_not_published`|Схема черновика ещё не опубликована|Публикация `delta` ссылается на черновик схемы. Её публикует публикация этой схемы|
 |409|`dictionary_inactive`|Справочник деактивирован|-|
-|409|`invalid_valid_from`|Начало не позже открытого состояния|Новое начало не позже начала открытой строки. Публикация `delta` проверяет так же|
+|409|`invalid_valid_from`|Начало не позже открытого состояния|Новое начало не позже начала открытой строки. Публикация `delta` и загрузка csv проверяют так же|
+|422|`duplicate_value_code`|В файле повторяется код|Один `value_code` встречается в csv больше одного раза|
 |422|`unknown_field`|Код колонки не входит в схему режима|Актуальное чтение и запись принимают код выбранной схемы. Чтение на момент принимает текущий код колонки и код этой колонки в схеме на этот момент|
 |422|`invalid_value`|Значение не годится для колонки|На записи тип не совпал или обязательное значение пустое. На чтении без момента обязательный атрибут в строке пуст или значение не совпадает с типом выбранной схемы|
 |500|`script_failed`|Секцию не удалось создать|-|
